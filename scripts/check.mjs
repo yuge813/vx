@@ -12,9 +12,11 @@ function files(root) {
 let count = 0;
 for (const file of [
   "package.json",
-  ...["server", "web", "scripts", "tests", "miniprogram"].flatMap(files),
+  ...["server", "web", "scripts", "tests", "miniprogram", "shared"].flatMap(
+    files,
+  ),
 ]) {
-  if (/\.(?:mjs|js)$/.test(file)) {
+  if (/\.(?:mjs|cjs|js)$/.test(file)) {
     execFileSync(process.execPath, ["--check", file], { stdio: "pipe" });
     count++;
   }
@@ -64,3 +66,10 @@ for (const name of ["packet", "chest", "bag"]) {
 console.log(
   `语法与JSON检查通过：${count}个文件；${app.pages.length}个小程序页面文件及事件引用检查通过。此检查不替代微信开发者工具编译。`,
 );
+
+for (const target of ["web/ad-pacing.js", "miniprogram/services/ad-pacing.js"])
+  assert.equal(
+    readFileSync(target, "utf8"),
+    readFileSync("shared/ad-pacing.cjs", "utf8"),
+    "广告预览调度源文件不一致；请从shared复制生成",
+  );

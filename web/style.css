@@ -1845,3 +1845,62 @@ nav button.active {
     font-size: 14px;
   }
 }
+.room-ad-banner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 12px 16px;
+  border-top: 1px solid #dce5df;
+  border-bottom: 1px solid #dce5df;
+  background: #f8fcf9;
+  color: #658476;
+  position: relative;
+  min-height: 72px;
+}
+.banner-badge {
+  background: #e4efe7;
+  font-size: 11px;
+  padding: 7px 9px;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+.room-ad-banner strong {
+  font-size: 13px;
+  font-weight: 500;
+  display: block;
+}
+.room-ad-banner small {
+  font-size: 10px;
+  color: #9aa69c;
+  display: block;
+}
+.room-ad-banner button {
+  border: 0;
+  background: none;
+  color: #93a296;
+  font-size: 22px;
+  margin-left: auto;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+}
+.room-tools {
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+@media (max-width: 350px) {
+  .room-ad-banner {
+    gap: 8px;
+    padding: 10px;
+  }
+  .room-ad-banner strong {
+    font-size: 11px;
+  }
+  .room-tools {
+    padding: 9px 12px;
+  }
+  .room-tools .link {
+    font-size: 10px;
+  }
+}

@@ -69,6 +69,10 @@ try {
     390,
   );
   await b.evaluate("document.querySelector('.room-scroll').scrollTop=0");
+  await b.until(
+    "Boolean(document.querySelector('[data-ad-preview=native]'))",
+    20000,
+  );
   await shot("mobile-group-chat");
   await shot("mobile-group-first");
   const toolbarBefore = await b.evaluate(
@@ -81,10 +85,25 @@ try {
     ),
     toolbarBefore,
   );
+  await b.until(
+    "Boolean(document.querySelector('[data-ad-preview=banner]'))",
+    40000,
+  );
+  await shot("mobile-group-ad-banner");
+  assert.equal(
+    await b.evaluate("document.querySelectorAll('[data-ad-preview]').length"),
+    1,
+  );
   await b.click("[data-action=hide-ad]");
   assert.equal(
-    await b.evaluate("Boolean(document.querySelector('.chat-ad'))"),
+    await b.evaluate("Boolean(document.querySelector('[data-ad-preview]'))"),
     false,
+  );
+  assert.equal(
+    await b.evaluate(
+      "Boolean(document.querySelector('[data-claim=redpacket]') && !document.querySelector('[data-claim=redpacket]').disabled)",
+    ),
+    true,
   );
   await b.click(".lucky-float");
   assert.equal(
@@ -230,7 +249,7 @@ try {
   );
   assert.deepEqual(b.exceptions, []);
   console.log(
-    "元享式新版浏览器实测通过：签到、390→780→8888叠包、暂存与取消保留、红包入账、概率福袋与冷却、提现冻结审核模拟完成、真实邀请绑定、反馈回复、补贴配置及320/390/600px布局。",
+    "元享式新版浏览器实测通过：15秒信息流/45秒横幅错峰预览、关闭后保留红包操作、签到、390→780→8888叠包、暂存与取消保留、红包入账、概率福袋与冷却、提现冻结审核模拟完成、真实邀请绑定、反馈回复、补贴配置及320/390/600px布局。",
   );
 } finally {
   await b?.close();

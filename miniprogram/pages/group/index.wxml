@@ -124,6 +124,13 @@
       >
     </button>
   </view>
+  <view wx:if="{{adPreview.current.format === 'banner'}}" class="room-ad-banner"
+    ><text class="banner-badge">横幅预览</text
+    ><view class="banner-copy"
+      ><view>等待期广告展示位置</view
+      ><text>开发布局 · 无真实广告与收益</text></view
+    ><button bindtap="hideAd" class="banner-close">×</button></view
+  >
   <view class="room-tools"
     ><button bindtap="rules">玩法说明</button
     ><button

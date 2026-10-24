@@ -10,7 +10,7 @@ const state = {
   support: [],
   busy: false,
   hidden: {},
-  adHidden: false,
+  adPreview: { enabled: false, current: null },
   walletCoins: 1000,
   offset: 0,
 };
@@ -28,7 +28,10 @@ const orderLabels = {
   demo_paid: "模拟完成，未向微信付款",
 };
 let token = localStorage.getItem("yx.token") || "",
-  pollBusy = false;
+  pollBusy = false,
+  adPacer = null,
+  adPacerAccount = "",
+  adPreviewSignature = "";
 const money = (coins) =>
   ((coins || 0) / (state.config?.coinsPerYuan || 1000)).toFixed(2);
 async function api(path, method = "GET", data) {
@@ -161,6 +164,46 @@ function home() {
       )}</div><section class="card"><div class="row"><h2>最近金币动态</h2><button class="link" data-nav="records">全部流水 ${icon("arrow")}</button></div>${recentLedger()}</section></div><aside><section class="card art-card"><div class="row"><h2>红包群正在等你</h2><span class="pill">可叠至${c.packetCap}</span></div><img src="/assets/packet.svg" alt="原创红包插画"><div class="reward-value">${state.group.banks.find((b) => b.kind === "redpacket")?.coins || 0}<small>当前待领金币</small></div><p class="muted">觉得少可以暂不打开，继续等待下一轮。金额由服务端累计，并有预算预留。</p><button class="button full" data-nav="group">进入红包群 ${icon("arrow")}</button></section><section class="card"><h2>每一笔，清清楚楚</h2><ol class="steps"><li><b>1</b><span>先确认基础奖励和补贴，再自主参与。</span></li><li><b>2</b><span>开发模拟成功后，服务端只记账一次。</span></li><li><b>3</b><span>演示提现先冻结，驳回退回，绝不显示虚假微信到账。</span></li></ol></section>${u.pendingTask ? '<button class="button secondary full" data-action="resume">继续未完成的任务</button>' : ""}</aside></div>`
   );
 }
+function paceAds() {
+  if (!state.user || !state.config) return false;
+  const key = "yx.ad-preview." + state.user.id;
+  if (!adPacer || adPacerAccount !== state.user.id) {
+    let saved = {};
+    try {
+      saved = JSON.parse(localStorage.getItem(key) || "{}");
+    } catch {}
+    adPacer = new window.AdPreviewPacing.Pacing(state.config.adPacing, saved);
+    adPacerAccount = state.user.id;
+  }
+  adPacer.configure(state.config.adPacing);
+  state.adPreview = adPacer.sample(
+    performance.now(),
+    state.page === "group" &&
+      !document.hidden &&
+      !state.busy &&
+      !$("#reward-dialog").open &&
+      !state.user.pendingTask,
+    Date.now() + state.offset,
+  );
+  const signature = JSON.stringify([
+    state.adPreview.enabled,
+    state.adPreview.current?.id,
+    state.adPreview.current?.format,
+    state.adPreview.sessionCount,
+    state.adPreview.dayCount,
+    state.adPreview.capped,
+  ]);
+  if (signature === adPreviewSignature) return false;
+  adPreviewSignature = signature;
+  try {
+    localStorage.setItem(key, JSON.stringify(adPacer.snapshot()));
+  } catch {}
+  return true;
+}
+function adScheduleText() {
+  const p = state.config.adPacing;
+  return `开发广告位预览：信息流首次${p.native.firstDelay}秒，间隔至少${p.native.interval}秒；横幅首次${p.banner.firstDelay}秒，间隔至少${p.banner.interval}秒。每次位置预览${p.duration}秒，类型错开至少${p.minGap}秒，关闭后冷却${p.closeCooldown}秒。\n每会话最多${p.sessionLimit}次，本机本账户每日最多${p.dailyLimit}次。仅累计群页面前台空闲时间；切后台、离开或有奖励任务时暂停，不补弹。\n插屏关闭，未核实适用场景及规则。所有秒数为开发设计，不是微信许可频次。预览不计曝光、收入或金币，正式环境关闭。本机次数只用于体验控制，不是后端反作弊。`;
+}
 function roomPacket(b) {
   const saved = state.hidden[b.kind] === b.generation + ":" + b.coins;
   if (saved)
@@ -169,20 +212,33 @@ function roomPacket(b) {
   return `<div class="chat-packet ${b.kind === "treasure" ? "is-treasure" : ""} ${!ready ? "is-waiting" : ""}" data-bank="${b.kind}"><button class="packet-open" data-claim="${b.kind}" ${!canClaim(b.kind, b) ? "disabled" : ""}><img src="/assets/${b.kind === "redpacket" ? "packet" : "chest"}.svg" alt=""><span class="packet-copy"><strong>${ready ? (b.kind === "redpacket" ? "恭喜发财，大吉大利" : "宝箱已准备，惊喜等你开") : b.kind === "redpacket" ? "下一份红包正在准备" : "下一份宝箱正在准备"}</strong><span>${b.locked ? "继续上次领取任务" : ready ? (b.kind === "redpacket" ? "点击领取红包" : "点击开启宝箱") : "倒计时结束后生成待领金额"}</span><b class="reward-value">${b.coins}<small> 金币</small></b></span></button>${ready && !b.locked ? `<button class="packet-close" data-skip="${b.kind}" aria-label="暂不打开，继续叠加">×</button>` : ""}<div class="packet-bottom"><span>${ready ? "开发奖励 · 非现金到账" : "系统准备中"}</span><span data-timer="${b.kind}"></span></div><div class="packet-track"><span data-bank-progress="${b.kind}"></span></div></div><div class="packet-hint">${b.atCap ? "已达本轮上限，可选择打开" : b.paused ? "新增累计暂停，已叠金币保留" : `每轮＋${b.increment} · 本轮上限${b.cap}`}</div>`;
 }
 function roomMessage(row) {
-  if (row.type === "ad" && state.adHidden) return "";
   const avatar = `<div class="room-avatar avatar-${row.type === "packet" ? row.bank.kind : row.type}">${esc(row.mark)}</div>`;
   const head = `<div class="message-head"><span>${esc(row.actor)}</span>${row.createdAt ? `<time>${shortTime(row.createdAt)}</time>` : "<small>系统</small>"}</div>`;
   let body;
   if (row.type === "packet") body = roomPacket(row.bank);
   else if (row.type === "ad")
-    body = `<div class="chat-ad"><div class="ad-art">${icon("video")}</div><div><strong>${esc(row.text)}</strong><span>${esc(row.detail)}</span><small>开发占位 · 未接入</small></div><button data-action="hide-ad" aria-label="关闭广告占位">×</button></div>`;
+    body = `<div class="chat-ad" data-ad-preview="native"><div class="ad-art">${icon("video")}</div><div><strong>${esc(row.text)}</strong><span>${esc(row.detail)}</span><small>开发占位 · 未接入</small></div><button data-action="hide-ad" aria-label="关闭广告占位">×</button></div>`;
   else
     body = `<div class="message-bubble ${row.type === "notice" ? "notice-bubble" : ""}">${esc(row.text)}${row.coins ? `<strong>${row.coins}金币</strong>` : ""}${row.detail ? `<small>${esc(row.detail)}</small>` : ""}</div>`;
   return `<article class="room-message ${row.type === "notice" ? "room-announcement" : ""}" data-message="${esc(row.id)}">${avatar}<div class="message-body">${head}${body}</div></article>`;
 }
 function group() {
   const room = state.group.room;
-  return `<section class="room-shell"><header class="room-top"><h1 title="${esc(room.title)}（${room.memberCount}）">${esc(room.title)}<span>（${room.memberCount}）</span></h1><div class="room-wallet"><span class="coin-emblem">金</span><strong>${state.user.balance.toLocaleString()}</strong><button class="room-withdraw" data-nav="wallet" aria-label="打开演示提现钱包">提现</button></div></header><div class="room-mode">开发联调 · 金币不可兑现 · 人数为注册账户数，非在线人数</div><div class="room-stage"><button class="lucky-float" data-nav="bag" aria-label="打开幸运福袋"><span class="lucky-tip">点击领奖</span><img src="/assets/bag.svg" alt=""><strong>福袋</strong></button><div class="room-scroll feed">${state.group.messages.map(roomMessage).join("")}<div class="room-end">本账户的系统动态</div></div></div><footer class="room-tools"><button class="link" data-action="rules">玩法说明</button>${state.user.pendingTask ? '<button class="link" data-action="resume">恢复未完成任务</button>' : ""}${state.config.mode === "development" ? '<button class="link" data-action="advance">开发：推进一轮</button>' : ""}</footer></section>`;
+  const rows = [...state.group.messages];
+  if (state.adPreview.current?.format === "native")
+    rows.splice(Math.max(1, rows.length - 1), 0, {
+      id: state.adPreview.current.id,
+      type: "ad",
+      actor: "广告位预览",
+      mark: "告",
+      text: "信息流位置预览",
+      detail: "未加载广告，不产生曝光或收入。",
+    });
+  const banner =
+    state.adPreview.current?.format === "banner"
+      ? `<aside class="room-ad-banner" data-ad-preview="banner"><span class="banner-badge">横幅预览</span><div><strong>等待期广告展示位置</strong><small>开发布局 · 无真实广告与收益</small></div><button data-action="hide-ad" aria-label="关闭横幅预览">×</button></aside>`
+      : "";
+  return `<section class="room-shell"><header class="room-top"><h1 title="${esc(room.title)}（${room.memberCount}）">${esc(room.title)}<span>（${room.memberCount}）</span></h1><div class="room-wallet"><span class="coin-emblem">金</span><strong>${state.user.balance.toLocaleString()}</strong><button class="room-withdraw" data-nav="wallet" aria-label="打开演示提现钱包">提现</button></div></header><div class="room-mode">开发联调 · 金币不可兑现 · 人数为注册账户数，非在线人数</div><div class="room-stage"><button class="lucky-float" data-nav="bag" aria-label="打开幸运福袋"><span class="lucky-tip">点击领奖</span><img src="/assets/bag.svg" alt=""><strong>福袋</strong></button><div class="room-scroll feed">${rows.map(roomMessage).join("")}<div class="room-end">本账户的系统动态</div></div></div>${banner}<footer class="room-tools"><button class="link" data-action="rules">玩法说明</button>${state.adPreview.enabled ? `<button class="link" data-action="ad-schedule" data-ad-status>广告预览 ${state.adPreview.sessionCount}/${state.config.adPacing.sessionLimit}</button>` : ""}${state.user.pendingTask ? '<button class="link" data-action="resume">恢复未完成任务</button>' : ""}${state.config.mode === "development" ? '<button class="link" data-action="advance">开发：推进一轮</button>' : ""}</footer></section>`;
 }
 function bag() {
   const c = state.config;
@@ -282,6 +338,7 @@ function profile() {
 }
 function render() {
   if (!state.user) return;
+  paceAds();
   document.body.classList.toggle("room-open", state.page === "group");
   const oldFeed = $(".feed"),
     scroll = oldFeed?.scrollTop || 0,
@@ -309,6 +366,10 @@ function render() {
 }
 function tick() {
   if (!state.user) return;
+  if (paceAds()) {
+    render();
+    return;
+  }
   const now = Date.now() + state.offset;
   for (const b of state.group?.banks || []) {
     const el = $('[data-timer="' + b.kind + '"]'),
@@ -436,6 +497,10 @@ async function claim(kind) {
 async function run(fn) {
   if (state.busy) return;
   state.busy = true;
+  paceAds();
+  document.querySelectorAll("[data-ad-preview]").forEach((el) => {
+    (el.closest(".room-message") || el).remove();
+  });
   $("#app").setAttribute("aria-busy", "true");
   document.querySelectorAll("#app button").forEach((b) => {
     b.disabled = true;
@@ -485,10 +550,11 @@ document.addEventListener("click", async (e) => {
     }
     const a = b.dataset.action;
     if (a === "hide-ad") {
-      state.adHidden = true;
+      adPacer.close(Date.now() + state.offset);
       render();
       return;
     }
+    if (a === "ad-schedule") window.alert(adScheduleText());
     if (a === "advance") await run(() => api("/dev/ready", "POST", {}));
     if (a === "resume")
       await run(() => claim(state.user.pendingTask?.kind || "signin"));
@@ -518,7 +584,7 @@ document.addEventListener("click", async (e) => {
       );
     if (a === "privacy")
       window.alert(
-        "开发版保存安装标识、会话、任务、金币流水、演示申请、单层邀请关系及反馈；不读取通讯录、位置、相册或剪贴板。正式运营还需主体隐私声明、保留期限、注销和企业客服流程。",
+        "开发版保存安装标识、会话、任务、金币流水、演示申请、单层邀请关系及反馈；本机保存广告位预览次数和关闭冷却，不上报为广告曝光或收入。不读取通讯录、位置、相册或剪贴板。正式运营还需主体隐私声明、保留期限、注销和企业客服流程。",
       );
     if (a === "retry") await initialize();
   } catch (e) {
@@ -566,6 +632,7 @@ document.addEventListener("submit", (e) => {
     });
   }
 });
+document.addEventListener("visibilitychange", tick);
 setInterval(tick, 1000);
 setInterval(async () => {
   if (

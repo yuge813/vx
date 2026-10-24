@@ -26,6 +26,15 @@ const extra = {
   prize120Weight: 25,
   prize200Weight: 12,
   prize500Weight: 3,
+  adPreviewEnabled: 1,
+  nativePreviewDelaySeconds: 15,
+  nativePreviewIntervalSeconds: 90,
+  bannerPreviewDelaySeconds: 45,
+  bannerPreviewIntervalSeconds: 120,
+  adPreviewDurationSeconds: 20,
+  adPreviewCloseCooldownSeconds: 120,
+  adPreviewSessionLimit: 6,
+  adPreviewDailyLimit: 20,
 };
 const names = {
   signin: "每日签到",
@@ -100,8 +109,36 @@ export class YuanxiangStore extends Store {
         interstitial: "disabled",
         native: "disabled",
       },
+      adPacing: this.adPacing(),
       referralCashEnabled: false,
       notice: "开发联调：金币不可兑现，广告为显式模拟，模拟完成不向微信付款。",
+    };
+  }
+  adPacing() {
+    const s = this.settings();
+    return {
+      mode:
+        this.development && s.adPreviewEnabled ? "preview_only" : "disabled",
+      version: s.version,
+      native: {
+        firstDelay: s.nativePreviewDelaySeconds,
+        interval: s.nativePreviewIntervalSeconds,
+      },
+      banner: {
+        firstDelay: s.bannerPreviewDelaySeconds,
+        interval: s.bannerPreviewIntervalSeconds,
+      },
+      duration: s.adPreviewDurationSeconds,
+      closeCooldown: s.adPreviewCloseCooldownSeconds,
+      minGap: 30,
+      sessionLimit: s.adPreviewSessionLimit,
+      dailyLimit: s.adPreviewDailyLimit,
+      interstitial: {
+        enabled: false,
+        reason: "场景及权限尚未核实，不按倒计时自动弹出",
+      },
+      notice:
+        "仅开发位置预览；间隔为产品假设，不是微信允许频次。不计广告曝光、观看、收入或奖励。",
     };
   }
   prizes() {
@@ -338,7 +375,7 @@ export class YuanxiangStore extends Store {
       };
       return {
         ...result,
-        messages: buildRoomMessages(result, { adPreview: this.development }),
+        messages: buildRoomMessages(result),
       };
     });
   }
@@ -815,6 +852,15 @@ export class YuanxiangStore extends Store {
       prize120Weight: [0, 100],
       prize200Weight: [0, 100],
       prize500Weight: [0, 100],
+      adPreviewEnabled: [0, 1],
+      nativePreviewDelaySeconds: [10, 300],
+      nativePreviewIntervalSeconds: [60, 3600],
+      bannerPreviewDelaySeconds: [10, 300],
+      bannerPreviewIntervalSeconds: [60, 3600],
+      adPreviewDurationSeconds: [5, 30],
+      adPreviewCloseCooldownSeconds: [60, 3600],
+      adPreviewSessionLimit: [0, 20],
+      adPreviewDailyLimit: [0, 100],
     };
     need(
       patch &&

@@ -16,7 +16,7 @@ function fixture(t, options = {}) {
 }
 const packets = (group) =>
   group.messages.filter((row) => row.type === "packet");
-test("消息流只展示本账户事件，群人数来自真实账户数，广告位显式标记", (t) => {
+test("消息流只展示本账户事件，群人数来自真实账户数，广告位由独立预览调度", (t) => {
   const { store, user } = fixture(t);
   assert.equal(store.group(user).room.memberCount, 1);
   const other = store.login("room_other_user").user.id;
@@ -29,11 +29,9 @@ test("消息流只展示本账户事件，群人数来自真实账户数，广�
   );
   assert.equal(packets(group).length, 2);
   assert.ok(packets(group).every((row) => row.bank.coins === 0));
-  assert.equal(group.messages.filter((row) => row.type === "ad").length, 1);
-  assert.match(
-    group.messages.find((row) => row.type === "ad").detail,
-    /未接入/,
-  );
+  assert.equal(group.messages.filter((row) => row.type === "ad").length, 0);
+  assert.equal(store.publicConfig().adPacing.mode, "preview_only");
+  assert.equal(store.publicConfig().adSlots.native, "disabled");
 });
 test("叠包后每个奖励池只有一张可操作卡，旧金额转为历史消息", (t) => {
   const { store, user, advance } = fixture(t);

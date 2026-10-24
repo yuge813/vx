@@ -73,7 +73,7 @@ npm run check
 npm run test:browser -- --screenshots
 ```
 
-测试使用临时数据库，覆盖新玩法与基础账务回归；wx适配层测试不替代微信工具或真机。53项测试通过；浏览器覆盖五个导航、悬浮福袋、固定群工具栏、广告占位关闭、签到、叠包至8888、取消保留、福袋、提现、邀请、反馈及320/390/600px布局。
+测试使用临时数据库，覆盖新玩法与基础账务回归；wx适配层测试不替代微信工具或真机。62项测试通过；浏览器覆盖五个导航、悬浮福袋、固定群工具栏、广告占位关闭、签到、叠包至8888、取消保留、福袋、提现、邀请、反馈及320/390/600px布局。
 
 下列截图均来自**浏览器实际运行**，不是微信开发者工具、真机或审核截图：
 
@@ -82,6 +82,7 @@ npm run test:browser -- --screenshots
 - [红包群第一包](docs/screenshots/yuanxiang/mobile-group-first.png)
 - [叠包至8888](docs/screenshots/yuanxiang/mobile-group-stacked.png)
 - [领取后恢复下一轮](docs/screenshots/yuanxiang/mobile-group-claimed.png)
+- [等待期间的底部横幅预览](docs/screenshots/yuanxiang/mobile-group-ad-banner.png)
 - [幸运福袋](docs/screenshots/yuanxiang/mobile-bag.png)
 - [金币钱包](docs/screenshots/yuanxiang/mobile-wallet.png)
 - [邀请记录](docs/screenshots/yuanxiang/mobile-invite.png)
@@ -95,6 +96,7 @@ npm run test:browser -- --screenshots
 server/store.mjs          基础账户、流水、冻结、审核及事务
 server/yuanxiang.mjs      新版叠包、福袋、签到、邀请、申诉与预算
 server/room-view.mjs      本账户聊天流、当前卡片与历史消息
+shared/ad-pacing.cjs      两端开发广告位预览调度源，不加载真实广告
 server/index.mjs          HTTP、鉴权、微信登录交换、扩展路由
 web/                     金币浏览器端与运营后台
 miniprogram/             原生8页、接口恢复、PNG素材
@@ -117,4 +119,4 @@ npm start
 
 先停止自己之前启动的服务，再启动新版。已有源码改动请先保存；不要覆盖.env.yuanxiang或data目录。ZIP用户在GitHub选择本分支，点Code → Download ZIP，解压到独立目录后按上面“下载与启动”操作。原生导入miniprogram后重新编译；浏览器强制刷新。
 
-五栏依次为：首页、红包、视频、邀请、我的。“视频”目前承载显式模拟的视频激励任务与福袋，不是短视频内容平台。红包群为本账户系统消息，不包含多人实时聊天、虚构群友或提现宣传。群人数来自已注册账户数，明确区别于在线人数。群内广告卡只在开发环境预览位置，尚未接入广告组件、不计曝光或收入。
+五栏依次为：首页、红包、视频、邀请、我的。“视频”目前承载显式模拟的视频激励任务与福袋，不是短视频内容平台。红包群为本账户系统消息，不包含多人实时聊天、虚构群友或提现宣传。群人数来自已注册账户数，明确区别于在线人数。群内信息流和底部横幅按前台时间错开预览：开发默认首次15/45秒，关闭后冷却120秒，每会话6次、本机每日20次；后台可配置。插屏关闭。尚未接入广告组件，不计曝光或收入。详见[等待期广告节奏与官方核实](docs/等待期广告节奏与官方核实.md)。

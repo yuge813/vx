@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import vm from "node:vm";
+import pacing from "../shared/ad-pacing.cjs";
 import { readFileSync } from "node:fs";
 import { Store } from "../server/store.mjs";
 import { createApp, createYuanxiangApp } from "../server/index.mjs";
@@ -173,7 +174,11 @@ test("原生聊天群页面加载真实卡片、暂存与恢复、金额更新�
   const { client, advance } = await clientFixture(t, true);
   let page;
   const routes = [];
+  let nativeNow = Date.now();
+  const previewStorage = new Map();
   const wx = {
+    getStorageSync: (k) => previewStorage.get(k),
+    setStorageSync: (k, v) => previewStorage.set(k, v),
     nextTick: (fn) => fn(),
     showToast() {},
     showModal() {},
@@ -186,10 +191,10 @@ test("原生聊天群页面加载真实卡片、暂存与恢复、金额更新�
       "utf8",
     ),
     {
-      require: () => client,
+      require: (path) => (path.endsWith("ad-pacing") ? pacing : client),
       getApp: () => ({ ready: () => Promise.resolve() }),
       wx,
-      Date,
+      Date: { now: () => nativeNow },
       Page: (definition) => (page = definition),
     },
   );
@@ -203,6 +208,26 @@ test("原生聊天群页面加载真实卡片、暂存与恢复、金额更新�
       .filter((r) => r.type === "packet")
       .every((r) => r.bank.disabled),
   );
+  const stepPreview = (seconds) => {
+    for (let i = 0; i < seconds; i++) {
+      nativeNow += 1000;
+      advance(1000);
+      page.tick();
+    }
+  };
+  stepPreview(15);
+  assert.equal(page.data.rows.filter((r) => r.type === "ad").length, 1);
+  stepPreview(30);
+  assert.equal(page.data.adPreview.current.format, "banner");
+  page._visible = false;
+  page.tick();
+  assert.equal(page.data.adPreview.current, null);
+  page._visible = true;
+  page.tick();
+  assert.equal(page.data.adPreview.current.format, "banner");
+  page.hideAd();
+  assert.equal(page.data.adPreview.current, null);
+  assert.ok([...previewStorage.values()][0].blockUntil > 0);
   advance(120000);
   await page.load();
   const row = () => page.data.rows.find((r) => r.bank?.kind === "redpacket");

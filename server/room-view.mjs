@@ -1,5 +1,5 @@
 // 群信息流的展示模型；不改变任务、叠包或金币账务。
-export function buildRoomMessages(group, { adPreview = false } = {}) {
+export function buildRoomMessages(group) {
   const records = group.feed.slice(-12);
   const liveByEvent = new Map();
   const used = new Set();
@@ -28,20 +28,6 @@ export function buildRoomMessages(group, { adPreview = false } = {}) {
       detail: "开发联调：金币不可兑现，消息是本账户的真实系统动态。",
     },
   ];
-  let inserted = false;
-  const ad = () => {
-    if (adPreview && !inserted) {
-      rows.push({
-        id: "ad-preview",
-        type: "ad",
-        actor: "开发广告位",
-        mark: "告",
-        text: "原生广告展示位置",
-        detail: "未接入广告组件，不产生曝光或收入。",
-      });
-      inserted = true;
-    }
-  };
   const packet = (bank, event = null) => ({
     id: "packet-" + bank.generation,
     type: "packet",
@@ -53,7 +39,6 @@ export function buildRoomMessages(group, { adPreview = false } = {}) {
   for (const event of records) {
     const bank = liveByEvent.get(event.id);
     if (bank) {
-      ad();
       rows.push(packet(bank, event));
     } else
       rows.push({
@@ -66,7 +51,6 @@ export function buildRoomMessages(group, { adPreview = false } = {}) {
         coins: event.coins,
       });
   }
-  ad();
   for (const bank of group.banks)
     if (!used.has(bank.kind)) rows.push(packet(bank));
   return rows;

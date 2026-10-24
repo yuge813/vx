@@ -407,3 +407,43 @@ page {
     font-size: 28rpx;
   }
 }
+.room-ad-banner {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  flex-shrink: 0;
+  padding: 24rpx 32rpx;
+  border-top: 1rpx solid #dce5df;
+  border-bottom: 1rpx solid #dce5df;
+  background: #f8fcf9;
+  color: #658476;
+  min-height: 144rpx;
+  box-sizing: border-box;
+}
+.banner-badge {
+  padding: 14rpx 18rpx;
+  background: #e4efe7;
+  font-size: 22rpx;
+  border-radius: 10rpx;
+  flex-shrink: 0;
+}
+.banner-copy {
+  min-width: 0;
+  font-size: 26rpx;
+}
+.banner-copy text {
+  font-size: 20rpx;
+  color: #9aa69c;
+}
+.room-native .banner-close {
+  margin-left: auto;
+  width: 68rpx;
+  height: 68rpx;
+  flex-shrink: 0;
+  color: #93a296;
+  font-size: 44rpx;
+}
+.room-tools {
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}

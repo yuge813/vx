@@ -107,8 +107,8 @@ export async function openBrowser(url, width = 1440, height = 1100) {
       if (r.exceptionDetails) throw new Error(r.exceptionDetails.text);
       return r.result.value;
     };
-    const until = async (expression) => {
-      const deadline = Date.now() + 12000;
+    const until = async (expression, timeoutMs = 12000) => {
+      const deadline = Date.now() + timeoutMs;
       while (Date.now() < deadline) {
         if (await evaluate(expression)) return;
         await pause(70);
