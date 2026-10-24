@@ -1,0 +1,93 @@
+<view class="page"
+  ><view class="eyebrow">RED PACKET ROOM</view
+  ><view class="heading">欢乐红包群</view
+  ><view class="muted">红包与宝箱独立累计，当前轮以倒计时为准。</view
+  ><view class="notice"
+    >开发联调 · 这里是你的个人系统动态，没有虚构群友或到账消息。</view
+  ><view wx:if="{{error}}" class="error" bindtap="load"
+    >{{error}} · 点击重试</view
+  ><block wx:if="{{group}}"
+    ><view class="bank-grid"
+      ><view wx:for="{{banks}}" wx:key="kind" class="bank"
+        ><block wx:if="{{!item.saved}}"
+          ><view class="row bank-head"
+            ><text>{{item.title}}</text
+            ><text
+              wx:if="{{item.coins && !item.locked}}"
+              class="close"
+              data-kind="{{item.kind}}"
+              bindtap="skip"
+              >×</text
+            ></view
+          ><image
+            class="bank-art"
+            src="/assets/{{item.art}}.png"
+            mode="aspectFit"
+          /><view class="bank-body"
+            ><view class="reward"
+              >{{item.coins}}<text class="caption"> 金币</text></view
+            ><view class="caption">本轮上限{{item.cap}}</view
+            ><view class="timer">{{item.timer}}</view
+            ><view class="progress"
+              ><view
+                class="progress-bar"
+                style="width:{{item.progress}}%"
+              ></view></view
+            ><button
+              class="button small"
+              data-kind="{{item.kind}}"
+              disabled="{{busy || !item.coins || (!item.locked && (group.user.status !== 'active' || !group.remaining[item.kind])) || config.adProvider !== 'demo'}}"
+              bindtap="claim"
+            >
+              {{item.locked ? '继续打开任务' : item.coins ? '打开领取（模拟）' :
+              '等待生成第一包'}}</button
+            ><view class="caption" style="margin-top: 14rpx"
+              >{{item.atCap ? '已到上限，等待打开' :
+              '暂不打开可继续叠加'}}</view
+            ></view
+          ></block
+        ><view wx:else class="bank-saved"
+          ><view class="title">{{item.title}}已暂存</view
+          ><view class="reward">{{item.coins}}</view
+          ><view class="caption">金额保留，继续等待</view
+          ><button
+            class="button light small"
+            data-kind="{{item.kind}}"
+            bindtap="restore"
+          >
+            查看暂存包
+          </button></view
+        ></view
+      ></view
+    ><view class="card"
+      ><view class="row"
+        ><text class="title">我的群动态</text
+        ><text class="caption">个人系统消息</text></view
+      ><view wx:if="{{!group.feed.length}}" class="empty"
+        >第一轮还在准备。到时生成待领金额。</view
+      ><view wx:for="{{group.feed}}" wx:key="id" class="feed-row"
+        ><view class="feed-icon">享</view
+        ><view class="feed-content"
+          ><view class="feed-message"
+            >{{item.title}}<view wx:if="{{item.coins}}" class="feed-coins"
+              >{{item.coins}}金币</view
+            ></view
+          ><view class="caption">系统 · {{item.time}}</view></view
+        ></view
+      ></view
+    ><view class="card"
+      ><view class="title">叠包规则</view
+      ><view class="muted space"
+        >先看金额，自主选择打开。任务创建时锁定金额和补贴，取消或过期保留叠包；完成后入账并开启新一轮。退出页面后按服务端时间恢复，预算不足时暂停新增。</view
+      ><view class="notice"
+        >真实横幅、插屏、原生广告未接入，等待不计广告曝光或收入。</view
+      ></view
+    ><button
+      wx:if="{{config.mode === 'development'}}"
+      class="button secondary"
+      bindtap="advance"
+    >
+      开发工具：推进下一轮
+    </button></block
+  ></view
+>

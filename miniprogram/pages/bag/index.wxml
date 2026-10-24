@@ -1,0 +1,46 @@
+<view class="page"
+  ><view class="eyebrow">A LITTLE LUCK, A CLEAR REWARD</view
+  ><view class="heading">幸运福袋，每分钟一次。</view
+  ><view class="muted">概率公开，结果在服务端锁定，领取前不公开。</view
+  ><view class="notice"
+    >仅开发模拟，无真实广告收益，没有付费抽取，金币不可兑现。</view
+  ><view wx:if="{{error}}" class="error" bindtap="load"
+    >{{error}} · 点击重试</view
+  ><block wx:if="{{user}}"
+    ><view class="card bag-hero"
+      ><text class="pill">今日剩余{{user.remaining.bag}}次</text
+      ><image class="art" src="/assets/bag.png" mode="aspectFit" /><view
+        class="title"
+        >这一袋，会有多少金币？</view
+      ><view class="muted">基础奖励另加补贴{{config.subsidyCoins}}金币</view
+      ><view class="timer">{{timer}}</view
+      ><button
+        class="button"
+        disabled="{{busy || config.adProvider !== 'demo' || (!resumable && (remaining || !user.remaining.bag || user.status !== 'active'))}}"
+        bindtap="claim"
+      >
+        开始模拟，抽取福袋</button
+      ><view class="caption space"
+        >取消也进入冷却，不支持反复挑选结果。</view
+      ></view
+    ><view class="card"
+      ><view class="row"
+        ><text class="title">奖励概率</text
+        ><text class="pill">基础金币，不含补贴</text></view
+      ><view class="prize-grid"
+        ><view wx:for="{{config.prizes}}" wx:key="coins" class="prize"
+          ><view class="reward">{{item.coins}}</view
+          ><view class="caption">金币 · 概率{{item.weight}}%</view></view
+        ></view
+      ><view class="caption"
+        >概率为本版开发参数，不代表元享真实数据。随机现金激励尚未核实规则。</view
+      ></view
+    ><button
+      wx:if="{{config.mode === 'development'}}"
+      class="button secondary"
+      bindtap="advance"
+    >
+      开发工具：结束冷却
+    </button></block
+  ></view
+>

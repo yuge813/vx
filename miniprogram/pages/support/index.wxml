@@ -1,0 +1,38 @@
+<view class="page"
+  ><view class="eyebrow">SUPPORT AND APPEALS</view
+  ><view class="heading">遇到问题，说清楚就好。</view
+  ><view class="muted">账户受限也可申诉，请勿填写密码或支付密钥。</view
+  ><view wx:if="{{error}}" class="error" bindtap="load"
+    >{{error}} · 点击重试</view
+  ><view class="card"
+    ><view class="title">客服与申诉</view
+    ><view class="notice">当前反馈进入内部运营后台，正式企业客服尚待配置。</view
+    ><textarea
+      class="feedback-input"
+      value="{{message}}"
+      bindinput="input"
+      maxlength="1000"
+      placeholder="描述任务时间、类型、订单编号和问题"
+    /><button
+      class="button"
+      disabled="{{busy || message.length < 2}}"
+      bindtap="submit"
+    >
+      提交反馈
+    </button></view
+  ><view class="card"
+    ><view class="title">我的反馈记录</view
+    ><view wx:if="{{!tickets.length}}" class="empty">还没有反馈记录。</view
+    ><view wx:for="{{tickets}}" wx:key="id" class="list-item"
+      ><view class="row"
+        ><text class="caption">{{item.time}}</text
+        ><text class="pill"
+          >{{item.state === 'resolved' ? '已回复' : '待处理'}}</text
+        ></view
+      ><view class="muted space">{{item.message}}</view
+      ><view wx:if="{{item.reply}}" class="notice"
+        >回复：{{item.reply}}</view
+      ></view
+    ></view
+  ></view
+>

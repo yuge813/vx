@@ -1,11 +1,71 @@
-const api = require('../../services/client')
+const api = require("../../services/client");
 Page({
-  data: { user: {}, config: {}, error: '' },
-  onShow() { this.load() },
-  async load() { try { await getApp().ready(); const [config, user] = await Promise.all([api.request('/api/config'), api.request('/api/me')]); this.setData({ user, config, shortId: user.id.slice(0, 8), error: '' }) } catch (error) { this.setData({ error: error.message }); api.toast(error) } },
-  records() { wx.navigateTo({ url: '/pages/records/index' }) },
-  async resume() { try { await api.claim('bag'); await this.load() } catch (error) { api.toast(error) } },
-  rules() { wx.showModal({ title: '开发版奖励说明', content: '签到、宝箱和固定福袋均为演示。金币不可兑现。基础奖励与补贴分别记账。宝箱120秒、福袋60秒冷却，每日次数以后台规则为准。没有随机中奖、无限叠包和邀请返佣。', showCancel: false }) },
-  privacy() { wx.showModal({ title: '开发版数据说明', content: '本地保存会话令牌、演示安装标识和未完成请求编号。后端保存演示账户、计划、奖励与申请记录，不读取通讯录、位置或剪贴板。正式发布前需补充运营主体、实际隐私指引、数据保留及注销流程。', showCancel: false }) },
-  support() { wx.showModal({ title: '客服与申诉尚待配置', content: '开发版不提供真实客服渠道。正式运营需配置企业客服及申诉处理流程。反馈时可提供用户编号：' + this.data.user.id + '，请勿发送密码或密钥。', showCancel: false }) }
-})
+  data: { user: null, config: null, error: "" },
+  onShow() {
+    this.load();
+  },
+  async load() {
+    try {
+      await getApp().ready();
+      const [user, config] = await Promise.all([
+        api.request("/api/me"),
+        api.request("/api/config"),
+      ]);
+      this.setData({
+        user,
+        config,
+        shortId: user.id.slice(0, 8),
+        money: api.money(user.balance),
+        error: "",
+      });
+    } catch (e) {
+      this.setData({ error: e.message });
+    }
+  },
+  wallet() {
+    wx.navigateTo({ url: "/pages/wallet/index" });
+  },
+  records() {
+    wx.navigateTo({ url: "/pages/records/index" });
+  },
+  invite() {
+    wx.navigateTo({ url: "/pages/invite/index" });
+  },
+  support() {
+    wx.navigateTo({ url: "/pages/support/index" });
+  },
+  async resume() {
+    try {
+      await api.claim(
+        this.data.user.pendingTask ? this.data.user.pendingTask.kind : "signin",
+      );
+      await this.load();
+    } catch (e) {
+      api.toast(e);
+    }
+  },
+  rules() {
+    wx.showModal({
+      title: "开发版玩法规则",
+      content:
+        "签到完成激励任务后每日一次；红包与宝箱分别每120秒叠加，默认390、上限8888；可暂存，取消任务保留金额；福袋60秒冷却、概率公开，补贴单独入账。以上是开发规则，未核实元享真实算法。",
+      showCancel: false,
+    });
+  },
+  capabilities() {
+    wx.showModal({
+      title: "实际能力状态",
+      content:
+        "真实激励、横幅、插屏和原生广告未接入；模拟观看不产生收入。手机权重及单次收益API未核实。真实微信零钱转账和现金邀请返佣关闭。",
+      showCancel: false,
+    });
+  },
+  privacy() {
+    wx.showModal({
+      title: "数据说明",
+      content:
+        "后端保存账户、任务、流水、演示申请、邀请关系和反馈，不读取通讯录、位置、相册或剪贴板。正式运营仍需完善企业隐私声明、保留期限、注销及客服流程。",
+      showCancel: false,
+    });
+  },
+});

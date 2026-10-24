@@ -1,4 +1,6 @@
 .env
+.env.wanfan
+.env.yuanxiang
 data/
 coverage/
 node_modules/

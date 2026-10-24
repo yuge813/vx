@@ -1,1 +1,61 @@
-<view class="page"><view class="eyebrow">YOUR OWN LITTLE CORNER</view><view class="heading">我的成长空间</view><view class="notice">开发版 · 无真实广告收益或现金转账</view><view class="error" wx:if="{{error}}" bindtap="load">{{error}} · 点击重试</view><view class="card row"><view class="avatar">✦</view><view style="flex:1"><view class="title">{{user.name || '星享用户'}}</view><view class="muted">用户编号 {{shortId || '—'}}</view><text class="pill">{{user.status === 'restricted' ? '账户受限 · 可申诉' : '每一份坚持，都有意义'}}</text></view></view><view class="card"><view class="row profile-row" bindtap="records"><text>金币收支记录</text><text>›</text></view><view class="row profile-row" bindtap="rules"><text>奖励规则</text><text>›</text></view><view class="row profile-row" bindtap="privacy"><text>隐私与数据说明</text><text>›</text></view><view class="row profile-row" bindtap="support"><text>客服与申诉</text><text>›</text></view></view><button wx:if="{{config.mode === 'development'}}" class="button light" bindtap="resume">继续未完成的演示任务</button><view class="footer"><view>星享成长 v0.1.0</view><view>真实广告、提现、客服和隐私流程需完成后续接入</view></view></view>
+<view class="page"
+  ><view class="eyebrow">YOUR REWARDS SPACE</view
+  ><view class="heading">我的金币空间</view
+  ><view class="notice">开发账户 · 无真实广告收入或微信零钱转账。</view
+  ><view wx:if="{{error}}" class="error" bindtap="load"
+    >{{error}} · 点击重试</view
+  ><block wx:if="{{user}}"
+    ><view class="card row"
+      ><view class="avatar">享</view
+      ><view class="flex"
+        ><view class="title">{{user.name}}</view
+        ><view class="caption">编号 {{shortId}}</view
+        ><text class="pill"
+          >{{user.status === 'active' ? '开发账户' :
+          '账户受限，可提交申诉'}}</text
+        ></view
+      ></view
+    ><view class="hero" bindtap="wallet"
+      ><view>我的金币</view><view class="balance">{{user.balance}}</view
+      ><view class="row"
+        ><text class="muted">演示换算¥{{money}}</text
+        ><text>金币钱包 →</text></view
+      ></view
+    ><view class="card"
+      ><view class="profile-row row" bindtap="wallet"
+        ><text>金币钱包与演示提现</text><text>›</text></view
+      ><view class="profile-row row" bindtap="records"
+        ><text>全部金币流水</text><text>›</text></view
+      ><view class="profile-row row" bindtap="invite"
+        ><text>邀请与推广记录</text><text>›</text></view
+      ><view class="profile-row row" bindtap="support"
+        ><text>客服、反馈与申诉</text><text>›</text></view
+      ><view class="profile-row row" bindtap="rules"
+        ><text>玩法及奖励规则</text><text>›</text></view
+      ><view class="profile-row row" bindtap="capabilities"
+        ><text>广告与支付能力</text><text>›</text></view
+      ><view class="profile-row row" bindtap="privacy"
+        ><text>数据与隐私说明</text><text>›</text></view
+      ></view
+    ><view class="card"
+      ><view class="title">今日剩余次数</view
+      ><view class="profile-row row"
+        ><text>签到</text
+        ><text class="pill">{{user.remaining.signin}}次</text></view
+      ><view class="profile-row row"
+        ><text>红包</text
+        ><text class="pill">{{user.remaining.redpacket}}次</text></view
+      ><view class="profile-row row"
+        ><text>宝箱</text
+        ><text class="pill">{{user.remaining.treasure}}次</text></view
+      ><view class="profile-row row"
+        ><text>福袋</text
+        ><text class="pill">{{user.remaining.bag}}次</text></view
+      ><view class="caption space"
+        >同时受每日总上限约束，由后端执行。</view
+      ></view
+    ><button wx:if="{{user.pendingTask}}" class="button light" bindtap="resume">
+      恢复未完成任务
+    </button></block
+  ><view class="footer">悦享金币 v0.3 · 元享式玩法独立开发版</view></view
+>

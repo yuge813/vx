@@ -1,14 +1,16 @@
 {
-  "name": "xingxiang-miniapp",
-  "version": "0.1.0",
+  "name": "yuanxiang-style-miniapp",
+  "version": "0.3.0",
   "private": true,
-  "description": "星享成长：微信小程序与广告奖励开发原型（不提供真实广告及支付）",
+  "description": "元享式金币玩法开发版：签到、红包群叠包、宝箱、福袋和演示提现",
   "type": "module",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "setup": "node scripts/setup.mjs",
-    "start": "node --env-file-if-exists=.env server/index.mjs",
-    "dev": "node --env-file-if-exists=.env --watch server/index.mjs",
+    "start": "node --env-file-if-exists=.env.yuanxiang server/index.mjs",
+    "dev": "node --env-file-if-exists=.env.yuanxiang --watch server/index.mjs",
     "test": "node --test tests/*.test.mjs",
     "check": "node scripts/check.mjs",
     "test:browser": "node scripts/browser-smoke.mjs"

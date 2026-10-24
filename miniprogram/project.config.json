@@ -1,9 +1,15 @@
 {
-  "description": "星享成长开发原型：未接入真实广告和支付",
+  "description": "悦享金币：元享式玩法开发版，真实广告与支付未接入",
   "appid": "touristappid",
-  "projectname": "xingxiang-miniapp",
+  "projectname": "yuanxiang-style-miniapp",
   "compileType": "miniprogram",
   "miniprogramRoot": "./",
   "libVersion": "3.7.7",
-  "setting": { "urlCheck": false, "es6": true, "enhance": true, "postcss": true, "minified": true }
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true
+  }
 }

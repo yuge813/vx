@@ -1,2 +1,51 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>星享成长 · 运营后台</title><link rel="stylesheet" href="/style.css"><script src="/admin.js" type="module"></script></head><body><main class="admin-shell"><header class="admin-head"><a class="brand" href="/"><span class="brand-icon">✦</span><span>星享运营台<small>OPERATIONS CONSOLE</small></span></a><div class="admin-actions"><a class="button light small" href="/">用户端 ↗</a><button class="button secondary small" id="logout" hidden>退出后台</button></div></header><div class="notice">开发版：奖励、提现和转账均为演示。模拟完成不会向微信付款。任何配置修改都不会开启真实广告或支付。</div><section id="login" class="card admin-login"><div class="eyebrow">AUTHORIZED ACCESS ONLY</div><h1>登录运营后台</h1><p class="muted">运行 npm run setup 后，从本机 .env 文件读取 ADMIN_TOKEN。令牌仅保留在当前页面内存，不写入浏览器存储。</p><form id="login-form"><label for="admin-token" class="muted">管理员令牌</label><input class="field" id="admin-token" type="password" minlength="32" required autocomplete="off" placeholder="输入本机管理员令牌"><div id="login-error" class="form-error" role="alert"></div><button class="button" type="submit">进入后台</button></form></section><div id="dashboard" hidden></div></main><div id="toast" role="status" class="toast" hidden></div></body></html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>悦享金币 · 运营后台</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/admin.js" type="module"></script>
+  </head>
+  <body>
+    <main class="admin-shell">
+      <header class="admin-head">
+        <a class="brand" href="/"
+          ><span class="logo">享</span
+          ><span>悦享运营台<small>REWARDS OPERATIONS</small></span></a
+        >
+        <div>
+          <a class="button small light" href="/">用户端 ↗</a
+          ><button class="button small secondary" id="logout" hidden>
+            退出后台
+          </button>
+        </div>
+      </header>
+      <div class="notice">
+        独立开发版：金币与提现均为模拟。真实广告、微信转账和现金佣金未接入，参数不能开启这些能力。
+      </div>
+      <section class="card admin-login" id="login">
+        <div class="eyebrow">AUTHORIZED ACCESS ONLY</div>
+        <h1>管理奖励，也守住每笔账。</h1>
+        <p class="muted">
+          使用根目录.env.yuanxiang中的ADMIN_TOKEN，令牌仅保存于当前页面内存。
+        </p>
+        <form id="login-form">
+          <label class="field-label" for="admin-token">管理员令牌</label
+          ><input
+            class="field"
+            type="password"
+            id="admin-token"
+            minlength="32"
+            required
+            autocomplete="off"
+          />
+          <div class="form-error" id="login-error" role="alert"></div>
+          <button class="button full" type="submit">进入运营后台</button>
+        </form>
+      </section>
+      <section id="dashboard" hidden></section>
+    </main>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>

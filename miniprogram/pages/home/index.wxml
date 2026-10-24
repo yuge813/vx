@@ -1,10 +1,84 @@
-<view class="page">
-  <view class="row"><view><view class="eyebrow">A LITTLE BETTER, EVERY DAY</view><view class="heading">今天，也值得期待</view></view><text class="pill">星享成长</text></view>
-  <view class="notice">开发演示 · 广告无收益，金币不可兑现，转账不会进入微信零钱。</view>
-  <view wx:if="{{error}}" class="error" bindtap="load">{{error}} · 点击重试</view>
-  <view class="hero"><view class="row"><text>我的演示金币</text><text class="pill">成长账户</text></view><view class="balance">{{user.balance || 0}}</view><view class="muted">演示换算 ¥{{money || '0.00'}} · 不代表可兑现资金</view></view>
-  <view class="stats"><view class="stat"><view class="stat-value">{{user.earnedToday || 0}}</view><view class="muted">今日奖励</view></view><view class="stat"><view class="stat-value">{{user.adsToday || 0}} / {{user.dailyLimit || 0}}</view><view class="muted">演示任务次数</view></view></view>
-  <view class="card"><view class="row"><text class="title">每日签到</text><text class="pill">＋{{config.checkinCoins}} 金币</text></view><view class="muted">签到免费完成，坚持从一件小事开始</view><view class="week"><view class="day" wx:for="{{user.week}}" wx:key="day"><view class="day-coin {{item.signed ? 'active' : ''}}">{{item.signed ? '✓' : '✦'}}</view><text>{{item.label}}</text></view></view><button class="button" disabled="{{busy || user.signedToday}}" bindtap="checkin">{{user.signedToday ? '今日已签到' : '签到领取金币'}}</button><button wx:if="{{user.signedToday && config.adProvider === 'demo'}}" class="button light" disabled="{{busy}}" bindtap="bonus">可选：演示广告加奖</button></view>
-  <view class="card"><view class="row"><text class="title">今日小计划</text><text class="muted">为自己积累一点成就</text></view><view wx:for="{{plans}}" wx:key="id" class="plan"><view class="check {{item.done ? 'done' : ''}}" data-id="{{item.id}}" bindtap="toggle">{{item.done ? '✓' : ''}}</view><text class="plan-text {{item.done ? 'done' : ''}}" data-id="{{item.id}}" bindtap="toggle">{{item.title}}</text><text class="delete" data-id="{{item.id}}" bindtap="remove">×</text></view><input class="plan-input" value="{{draft}}" bindinput="input" placeholder="添加一件今天想完成的小事" maxlength="60" bindconfirm="addPlan"/><button class="button secondary" disabled="{{busy || !draft}}" bindtap="addPlan">添加计划</button></view>
-  <button class="button light" bindtap="chests">去宝箱广场看看 →</button><view class="footer">星享成长 · 让日常多一点小成就</view>
-</view>
+<view class="page"
+  ><view class="eyebrow">EVERY DAY, A LITTLE MORE JOY</view
+  ><view class="heading">签到攒金币，惊喜每天有。</view
+  ><view class="muted">签到、红包群、宝箱和福袋，都在这里。</view
+  ><view class="notice">开发联调 · 广告为显式模拟，金币不可兑现。</view
+  ><view wx:if="{{error}}" class="error" bindtap="load"
+    >{{error}} · 点击重试</view
+  ><block wx:if="{{user}}"
+    ><view class="hero" bindtap="wallet"
+      ><view class="row"
+        ><text>我的金币</text><text class="pill">开发账户</text></view
+      ><view class="balance"
+        >{{user.balance}}<text class="balance-unit">金币</text></view
+      ><view class="row"
+        ><text class="muted">{{config.coinsPerYuan}}金币演示换算1元</text
+        ><text>打开钱包 →</text></view
+      ></view
+    ><view class="stats"
+      ><view class="stat"
+        ><view class="stat-value">{{user.earnedToday}}</view
+        ><view class="caption">今日入账 / 金币</view></view
+      ><view class="stat"
+        ><view class="stat-value">{{user.adsToday}} / {{user.dailyLimit}}</view
+        ><view class="caption">完成任务 / 上限</view></view
+      ><view class="stat"
+        ><view class="stat-value">{{user.frozen}}</view
+        ><view class="caption">申请冻结 / 金币</view></view
+      ></view
+    ><view class="card"
+      ><view class="row"
+        ><text class="title">每日签到</text
+        ><text class="pill"
+          >{{config.signinBase}}＋{{config.subsidyCoins}}金币</text
+        ></view
+      ><view class="muted">完成签到激励任务后入账，每个业务日限领一次。</view
+      ><view class="week"
+        ><view wx:for="{{user.week}}" wx:key="day" class="day"
+          ><view class="day-coin {{item.signed ? 'active' : ''}}"
+            >{{item.signed ? '✓' : item.dayNumber}}</view
+          ><text>{{item.label}}</text></view
+        ></view
+      ><button
+        class="button"
+        data-kind="signin"
+        bindtap="claim"
+        disabled="{{busy || !canSignin}}"
+      >
+        {{user.signedToday ? '今日已签到' : config.adProvider === 'demo' ?
+        '模拟签到，领取金币' : '真实广告尚未接入'}}
+      </button></view
+    ><view class="shortcuts"
+      ><view class="shortcut" bindtap="group"
+        ><image src="/assets/packet.png" mode="aspectFit" /><text>红包群</text
+        ><view class="caption">两分钟继续叠包</view></view
+      ><view class="shortcut" bindtap="bag"
+        ><image src="/assets/bag.png" mode="aspectFit" /><text>幸运福袋</text
+        ><view class="caption">每分钟一次机会</view></view
+      ><view class="shortcut" bindtap="invite"
+        ><image src="/assets/chest.png" mode="aspectFit" /><text>邀请好友</text
+        ><view class="caption">单层关系记录</view></view
+      ></view
+    ><view class="card art-card"
+      ><view class="row"
+        ><text class="title">红包群正在等你</text
+        ><text class="pill">可叠至{{config.packetCap}}</text></view
+      ><image class="art" src="/assets/packet.png" mode="aspectFit" /><view
+        class="muted"
+        >先看金额，觉得少可以暂存，继续等待下一轮。已累计金额有预算预留。</view
+      ><button class="button" bindtap="group">进入欢乐红包群 →</button></view
+    ><view class="card"
+      ><view class="row"
+        ><text class="title">最近金币动态</text
+        ><text class="link" bindtap="records">全部流水 →</text></view
+      ><view wx:if="{{!ledger.length}}" class="empty"
+        >还没有金币记录，完成任务后显示真实开发流水。</view
+      ><view wx:for="{{ledger}}" wx:key="id" class="list-item"
+        ><view class="row"
+          ><text>{{item.title}}</text
+          ><text class="amount">{{item.delta}}</text></view
+        ><view class="caption">{{item.time}}</view></view
+      ></view
+    ></block
+  ><view class="footer">悦享金币 · 元享式玩法独立开发版</view></view
+>

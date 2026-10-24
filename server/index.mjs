@@ -1,141 +1,416 @@
-import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { resolve, extname, sep } from 'node:path';
-import { timingSafeEqual } from 'node:crypto';
-import { Store, AppError } from './store.mjs';
+import { createServer } from "node:http";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { resolve, extname, sep } from "node:path";
+import { timingSafeEqual } from "node:crypto";
+import { Store, AppError } from "./store.mjs";
+import { YuanxiangStore } from "./yuanxiang.mjs";
 
-const publicRoot = fileURLToPath(new URL('../web/', import.meta.url));
-const fail = (message, status = 400, code) => { throw new AppError(message, status, code); };
+const publicRoot = fileURLToPath(new URL("../web/", import.meta.url));
+const fail = (message, status = 400, code) => {
+  throw new AppError(message, status, code);
+};
 async function body(req) {
-  if (!String(req.headers['content-type'] || '').startsWith('application/json')) fail('请使用 application/json', 415);
-  const chunks = []; let size = 0;
+  if (!String(req.headers["content-type"] || "").startsWith("application/json"))
+    fail("请使用 application/json", 415);
+  const chunks = [];
+  let size = 0;
   for await (const chunk of req) {
-    size += chunk.length; if (size > 16384) fail('请求内容过大', 413); chunks.push(chunk);
+    size += chunk.length;
+    if (size > 16384) fail("请求内容过大", 413);
+    chunks.push(chunk);
   }
   try {
-    const value = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
-    if (!value || Array.isArray(value) || typeof value !== 'object') fail('请求格式错误');
+    const value = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+    if (!value || Array.isArray(value) || typeof value !== "object")
+      fail("请求格式错误");
     return value;
-  } catch (e) { if (e instanceof AppError) throw e; fail('JSON 格式错误'); }
+  } catch (e) {
+    if (e instanceof AppError) throw e;
+    fail("JSON 格式错误");
+  }
 }
 function sameSecret(actual, expected) {
   if (!actual || !expected) return false;
-  const a = Buffer.from(actual), b = Buffer.from(expected);
+  const a = Buffer.from(actual),
+    b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-export function createApp({ store = new Store(), adminToken = '', wxAppId = '', wxAppSecret = '', fetcher = fetch } = {}) {
+export function createApp({
+  store = new Store(),
+  adminToken = "",
+  wxAppId = "",
+  wxAppSecret = "",
+  fetcher = fetch,
+  publicOrigin = "",
+  extension = null,
+} = {}) {
+  if (
+    publicOrigin &&
+    (new URL(publicOrigin).origin !== publicOrigin ||
+      !["http:", "https:"].includes(new URL(publicOrigin).protocol))
+  )
+    throw new Error("PUBLIC_ORIGIN必须是HTTP或HTTPS源站，不带路径或末尾斜线");
   const limits = new Map();
   let lastSweep = 0;
   const server = createServer(async (req, res) => {
-    const send = (status, value) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(value)); };
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Referrer-Policy', 'no-referrer');
-    res.setHeader('Cache-Control', 'no-store');
-    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+    const send = (status, value) => {
+      res.writeHead(status, {
+        "Content-Type": "application/json; charset=utf-8",
+      });
+      res.end(JSON.stringify(value));
+    };
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader(
+      "Content-Security-Policy",
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+    );
     try {
-      const url = new URL(req.url, 'http://localhost'), path = url.pathname;
-      if (path.startsWith('/api/')) {
+      const url = new URL(req.url, "http://localhost"),
+        path = url.pathname;
+      if (path.startsWith("/api/")) {
         const now = Date.now();
-        if (now - lastSweep > 60000) { for (const [key, value] of limits) if (now > value.until) limits.delete(key); lastSweep = now; }
-        const group = path.startsWith('/api/auth/') ? 'auth' : 'api';
-        const key = `${req.socket.remoteAddress}:${group}`, limit = group === 'auth' ? 30 : 240;
+        if (now - lastSweep > 60000) {
+          for (const [key, value] of limits)
+            if (now > value.until) limits.delete(key);
+          lastSweep = now;
+        }
+        const group = path.startsWith("/api/auth/") ? "auth" : "api";
+        const key = `${req.socket.remoteAddress}:${group}`,
+          limit = group === "auth" ? 30 : 240;
         let bucket = limits.get(key);
-        if (!bucket || now > bucket.until) { bucket = { n: 0, until: now + 60000 }; limits.set(key, bucket); }
-        if (++bucket.n > limit) { res.setHeader('Retry-After', '60'); fail('请求过于频繁，请稍后再试', 429); }
+        if (!bucket || now > bucket.until) {
+          bucket = { n: 0, until: now + 60000 };
+          limits.set(key, bucket);
+        }
+        if (++bucket.n > limit) {
+          res.setHeader("Retry-After", "60");
+          fail("请求过于频繁，请稍后再试", 429);
+        }
         if (req.headers.origin) {
-          const expected = `${req.socket.encrypted ? 'https' : 'http'}://${req.headers.host}`;
-          if (req.headers.origin !== expected) fail('不允许跨站请求', 403);
+          const expected =
+            publicOrigin ||
+            `${req.socket.encrypted ? "https" : "http"}://${req.headers.host}`;
+          if (req.headers.origin !== expected) fail("不允许跨站请求", 403);
         }
-        if (req.method === 'GET' && path === '/api/health') return send(200, { ok: true, mode: store.development ? 'development' : 'production', realAds: false, realPayments: false });
-        if (req.method === 'GET' && path === '/api/config') return send(200, store.publicConfig());
-        if (req.method === 'POST' && path === '/api/auth/demo') {
-          const data = await body(req); return send(200, store.login(data.installationId, true));
-        }
-        if (req.method === 'POST' && path === '/api/auth/wechat') {
+        if (req.method === "GET" && path === "/api/health")
+          return send(200, {
+            ok: true,
+            mode: store.development ? "development" : "production",
+            realAds: false,
+            realPayments: false,
+          });
+        if (req.method === "GET" && path === "/api/config")
+          return send(200, store.publicConfig());
+        if (req.method === "POST" && path === "/api/auth/demo") {
           const data = await body(req);
-          if (!wxAppId || !wxAppSecret) fail('尚未配置微信登录凭据，请使用开发模式', 503, 'WECHAT_NOT_CONFIGURED');
-          if (typeof data.code !== 'string' || !data.code || data.code.length > 256) fail('缺少有效登录凭证');
+          return send(200, store.login(data.installationId, true));
+        }
+        if (req.method === "POST" && path === "/api/auth/wechat") {
+          const data = await body(req);
+          if (!wxAppId || !wxAppSecret)
+            fail(
+              "尚未配置微信登录凭据，请使用开发模式",
+              503,
+              "WECHAT_NOT_CONFIGURED",
+            );
+          if (
+            typeof data.code !== "string" ||
+            !data.code ||
+            data.code.length > 256
+          )
+            fail("缺少有效登录凭证");
           let payload;
           try {
-            const upstream = new URL('https://api.weixin.qq.com/sns/jscode2session');
-            upstream.search = new URLSearchParams({ appid: wxAppId, secret: wxAppSecret, js_code: data.code, grant_type: 'authorization_code' });
-            const reply = await fetcher(upstream, { signal: AbortSignal.timeout(10000) });
-            if (!reply.ok) fail('微信登录服务暂不可用', 502);
+            const upstream = new URL(
+              "https://api.weixin.qq.com/sns/jscode2session",
+            );
+            upstream.search = new URLSearchParams({
+              appid: wxAppId,
+              secret: wxAppSecret,
+              js_code: data.code,
+              grant_type: "authorization_code",
+            });
+            const reply = await fetcher(upstream, {
+              signal: AbortSignal.timeout(10000),
+            });
+            if (!reply.ok) fail("微信登录服务暂不可用", 502);
             payload = await reply.json();
-          } catch { fail('微信登录服务暂不可用，请稍后再试', 502); }
-          if (payload.errcode || typeof payload.openid !== 'string' || !payload.openid) fail('微信登录凭证无效，请重试', 401);
+          } catch {
+            fail("微信登录服务暂不可用，请稍后再试", 502);
+          }
+          if (
+            payload.errcode ||
+            typeof payload.openid !== "string" ||
+            !payload.openid
+          )
+            fail("微信登录凭证无效，请重试", 401);
           // session_key 仅存在于该次服务器响应中，不写入客户端、日志或公开资料。
           return send(200, store.login(`wx:${payload.openid}`, false));
         }
-        const token = String(req.headers.authorization || '').replace(/^Bearer /, '');
-        if (path.startsWith('/api/admin/')) {
-          if (adminToken.length < 32 || !sameSecret(token, adminToken)) fail('管理员令牌无效或尚未配置', 401);
-          if (req.method === 'GET' && path === '/api/admin/overview') return send(200, store.adminOverview());
-          if (req.method === 'PUT' && path === '/api/admin/settings') return send(200, store.updateSettings(await body(req)));
+        const token = String(req.headers.authorization || "").replace(
+          /^Bearer /,
+          "",
+        );
+        if (path.startsWith("/api/admin/")) {
+          if (adminToken.length < 32 || !sameSecret(token, adminToken))
+            fail("管理员令牌无效或尚未配置", 401);
+          if (
+            extension &&
+            (await extension({
+              req,
+              path,
+              admin: true,
+              send,
+              readBody: () => body(req),
+              store,
+            }))
+          )
+            return;
+          if (req.method === "GET" && path === "/api/admin/overview")
+            return send(200, store.adminOverview());
+          if (req.method === "PUT" && path === "/api/admin/settings")
+            return send(200, store.updateSettings(await body(req)));
           let match;
-          if (req.method === 'POST' && (match = path.match(/^\/api\/admin\/withdrawals\/([a-f0-9-]+)\/review$/))) {
-            const data = await body(req); return send(200, store.reviewWithdrawal(match[1], data.action, data.reason));
+          if (
+            req.method === "POST" &&
+            (match = path.match(
+              /^\/api\/admin\/withdrawals\/([a-f0-9-]+)\/review$/,
+            ))
+          ) {
+            const data = await body(req);
+            return send(
+              200,
+              store.reviewWithdrawal(match[1], data.action, data.reason),
+            );
           }
-          if (req.method === 'PUT' && (match = path.match(/^\/api\/admin\/users\/([a-f0-9-]+)$/))) return send(200, store.updateUser(match[1], await body(req)));
-          fail('接口不存在', 404);
+          if (
+            req.method === "PUT" &&
+            (match = path.match(/^\/api\/admin\/users\/([a-f0-9-]+)$/))
+          )
+            return send(200, store.updateUser(match[1], await body(req)));
+          fail("接口不存在", 404);
         }
         const userId = store.authenticate(token);
-        if (req.method === 'GET' && path === '/api/me') return send(200, store.profile(userId));
-        if (req.method === 'GET' && path === '/api/ledger') return send(200, store.ledger(userId));
-        if (req.method === 'POST' && path === '/api/checkin') { await body(req); return send(200, store.checkin(userId)); }
-        if (req.method === 'POST' && path === '/api/tasks') return send(200, store.createTask(userId, (await body(req)).kind));
+        if (
+          extension &&
+          (await extension({
+            req,
+            path,
+            admin: false,
+            userId,
+            send,
+            readBody: () => body(req),
+            store,
+          }))
+        )
+          return;
+        if (req.method === "GET" && path === "/api/me")
+          return send(200, store.profile(userId));
+        if (req.method === "GET" && path === "/api/ledger")
+          return send(200, store.ledger(userId));
+        if (req.method === "POST" && path === "/api/checkin") {
+          await body(req);
+          return send(200, store.checkin(userId));
+        }
+        if (req.method === "POST" && path === "/api/tasks")
+          return send(200, store.createTask(userId, (await body(req)).kind));
         let match;
-        if ((match = path.match(/^\/api\/tasks\/([a-f0-9-]+)(?:\/(complete|cancel))?$/))) {
-          if (req.method === 'GET' && !match[2]) return send(200, store.task(userId, match[1]));
-          if (req.method === 'POST' && match[2]) {
+        if (
+          (match = path.match(
+            /^\/api\/tasks\/([a-f0-9-]+)(?:\/(complete|cancel))?$/,
+          ))
+        ) {
+          if (req.method === "GET" && !match[2])
+            return send(200, store.task(userId, match[1]));
+          if (req.method === "POST" && match[2]) {
             await body(req);
-            return send(200, match[2] === 'complete' ? store.completeTask(userId, match[1]) : store.cancelTask(userId, match[1]));
+            return send(
+              200,
+              match[2] === "complete"
+                ? store.completeTask(userId, match[1])
+                : store.cancelTask(userId, match[1]),
+            );
           }
         }
-        if (path === '/api/withdrawals') {
-          if (req.method === 'GET') return send(200, store.withdrawals(userId));
-          if (req.method === 'POST') { const data = await body(req); return send(200, store.withdraw(userId, data.coins, data.requestKey)); }
+        if (path === "/api/withdrawals") {
+          if (req.method === "GET") return send(200, store.withdrawals(userId));
+          if (req.method === "POST") {
+            const data = await body(req);
+            return send(
+              200,
+              store.withdraw(userId, data.coins, data.requestKey),
+            );
+          }
         }
-        if (path === '/api/plans') {
-          if (req.method === 'GET') return send(200, store.plans(userId));
-          if (req.method === 'POST') return send(200, store.addPlan(userId, (await body(req)).title));
+        if (path === "/api/plans") {
+          if (req.method === "GET") return send(200, store.plans(userId));
+          if (req.method === "POST")
+            return send(200, store.addPlan(userId, (await body(req)).title));
         }
         if ((match = path.match(/^\/api\/plans\/([a-f0-9-]+)$/))) {
-          if (req.method === 'PUT') return send(200, store.changePlan(userId, match[1], (await body(req)).done));
-          if (req.method === 'DELETE') return send(200, store.removePlan(userId, match[1]));
+          if (req.method === "PUT")
+            return send(
+              200,
+              store.changePlan(userId, match[1], (await body(req)).done),
+            );
+          if (req.method === "DELETE")
+            return send(200, store.removePlan(userId, match[1]));
         }
-        if (req.method === 'POST' && path === '/api/dev/ready') { await body(req); return send(200, store.demoReady(userId)); }
-        fail('接口不存在', 404);
+        if (req.method === "POST" && path === "/api/dev/ready") {
+          await body(req);
+          return send(200, store.demoReady(userId));
+        }
+        fail("接口不存在", 404);
       }
-      if (req.method !== 'GET') fail('请求方法不支持', 405);
-      const asset = path === '/' ? 'index.html' : path === '/admin' ? 'admin.html' : decodeURIComponent(path).replace(/^\/+/, '');
+      if (req.method !== "GET") fail("请求方法不支持", 405);
+      const asset =
+        path === "/"
+          ? "index.html"
+          : path === "/admin"
+            ? "admin.html"
+            : decodeURIComponent(path).replace(/^\/+/, "");
       const file = resolve(publicRoot, asset);
-      if (!file.startsWith(resolve(publicRoot) + sep)) fail('路径无效', 403);
+      if (!file.startsWith(resolve(publicRoot) + sep)) fail("路径无效", 403);
       let content;
-      try { content = await readFile(file); } catch { fail('页面不存在', 404); }
-      const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml' }[extname(file)] || 'application/octet-stream';
-      res.writeHead(200, { 'Content-Type': mime }); res.end(content);
+      try {
+        content = await readFile(file);
+      } catch {
+        fail("页面不存在", 404);
+      }
+      const mime =
+        {
+          ".html": "text/html; charset=utf-8",
+          ".js": "text/javascript; charset=utf-8",
+          ".css": "text/css; charset=utf-8",
+          ".svg": "image/svg+xml",
+        }[extname(file)] || "application/octet-stream";
+      res.writeHead(200, { "Content-Type": mime });
+      res.end(content);
     } catch (error) {
-      if (!(error instanceof AppError)) console.error('请求处理异常', error.name); // 不记录请求体、令牌或上游凭据。
-      send(error instanceof AppError ? error.status : 500, { error: { code: error.code || 'INTERNAL_ERROR', message: error instanceof AppError ? error.message : '服务暂不可用，请稍后再试' } });
+      if (!(error instanceof AppError))
+        console.error("请求处理异常", error.name); // 不记录请求体、令牌或上游凭据。
+      send(error instanceof AppError ? error.status : 500, {
+        error: {
+          code: error.code || "INTERNAL_ERROR",
+          message:
+            error instanceof AppError
+              ? error.message
+              : "服务暂不可用，请稍后再试",
+        },
+      });
     }
   });
-  server.requestTimeout = 15000; server.headersTimeout = 10000;
+  server.requestTimeout = 15000;
+  server.headersTimeout = 10000;
   return { server, store };
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const mode = process.env.APP_ENV || 'development';
-  if (!['development', 'production'].includes(mode)) throw new Error('APP_ENV 只能是 development 或 production');
-  const development = mode === 'development', provider = process.env.AD_PROVIDER || (development ? 'demo' : 'disabled');
-  if (!['demo', 'disabled'].includes(provider)) throw new Error('当前只实现 demo/disabled 广告适配器');
-  const store = new Store({ path: process.env.DB_PATH || './data/xingxiang.sqlite', development, adProvider: provider });
-  const { server } = createApp({ store, adminToken: process.env.ADMIN_TOKEN || '', wxAppId: process.env.WX_APP_ID || '', wxAppSecret: process.env.WX_APP_SECRET || '' });
-  const port = Number(process.env.PORT || 8787), host = process.env.HOST || '127.0.0.1';
-  server.listen(port, host, () => console.log(`星享开发服务已启动，监听 ${host}:${port}；真实广告与真实转账均未接入。`));
+export async function yuanxiangRoutes({
+  req,
+  path,
+  admin,
+  userId,
+  send,
+  readBody,
+  store,
+}) {
+  let match;
+  if (admin) {
+    if (
+      req.method === "POST" &&
+      (match = path.match(/^\/api\/admin\/support\/([a-f0-9-]+)\/reply$/))
+    ) {
+      send(200, store.replySupport(match[1], (await readBody()).reply));
+      return true;
+    }
+    return false;
+  }
+  if (path.startsWith("/api/plans")) {
+    send(404, {
+      error: { code: "NOT_FOUND", message: "金币版本不提供清单功能" },
+    });
+    return true;
+  }
+  if (req.method === "GET" && path === "/api/group") {
+    send(200, store.group(userId));
+    return true;
+  }
+  if (req.method === "POST" && path === "/api/group/skip") {
+    send(200, store.skip(userId, (await readBody()).kind));
+    return true;
+  }
+  if (req.method === "GET" && path === "/api/referral") {
+    send(200, store.referral(userId));
+    return true;
+  }
+  if (req.method === "POST" && path === "/api/referral/bind") {
+    send(200, store.bindReferral(userId, (await readBody()).code));
+    return true;
+  }
+  if (path === "/api/support") {
+    if (req.method === "GET") {
+      send(200, store.supportList(userId));
+      return true;
+    }
+    if (req.method === "POST") {
+      send(200, store.support(userId, (await readBody()).message));
+      return true;
+    }
+  }
+  return false;
+}
+
+export function createYuanxiangApp(options = {}) {
+  return createApp({
+    ...options,
+    store: options.store || new YuanxiangStore(),
+    extension: yuanxiangRoutes,
+  });
+}
+
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  const mode = process.env.APP_ENV || "development";
+  if (!["development", "production"].includes(mode))
+    throw new Error("APP_ENV 只能是 development 或 production");
+  const development = mode === "development",
+    provider = process.env.AD_PROVIDER || (development ? "demo" : "disabled");
+  if (!["demo", "disabled"].includes(provider))
+    throw new Error("当前只实现 demo/disabled 广告适配器");
+  const store = new YuanxiangStore({
+    path: process.env.DB_PATH || "./data/yuanxiang.sqlite",
+    development,
+    adProvider: provider,
+  });
+  const { server } = createYuanxiangApp({
+    store,
+    adminToken: process.env.ADMIN_TOKEN || "",
+    wxAppId: process.env.WX_APP_ID || "",
+    wxAppSecret: process.env.WX_APP_SECRET || "",
+    publicOrigin: process.env.PUBLIC_ORIGIN || "",
+  });
+  const port = Number(process.env.PORT || 8792),
+    host = process.env.HOST || "127.0.0.1";
+  server.listen(port, host, () =>
+    console.log(
+      `悦享金币已启动，监听 ${host}:${port}；签到/红包群/福袋/金币钱包；真实广告与转账未接入。`,
+    ),
+  );
   let closing = false;
-  const stop = () => { if (closing) return; closing = true; server.close(() => { store.close(); process.exit(0); }); };
-  process.on('SIGINT', stop); process.on('SIGTERM', stop);
+  const stop = () => {
+    if (closing) return;
+    closing = true;
+    server.close(() => {
+      store.close();
+      process.exit(0);
+    });
+  };
+  process.on("SIGINT", stop);
+  process.on("SIGTERM", stop);
 }

@@ -1,3 +1,43 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#fffaf4"><title>星享成长 · 开发体验</title><link rel="stylesheet" href="/style.css"><script src="/app.js" type="module"></script></head>
-<body><div class="shell"><aside class="sidebar"><a class="brand" href="/"><span class="brand-icon">✦</span><span>星享成长<small>MAKE EVERY DAY COUNT</small></span></a><div class="side-caption">我的日常</div><nav id="navigation" aria-label="主要导航"><button data-page="home">◈ <span>今日成长</span></button><button data-page="chests">▣ <span>宝箱广场</span></button><button data-page="wallet">▤ <span>我的钱包</span></button><button data-page="profile">☺ <span>个人空间</span></button></nav><div class="side-bottom"><span class="live-dot"></span> 开发体验版 v0.1.0<a href="/admin">打开运营后台 ↗</a></div></aside><main id="app" aria-live="polite"><div class="empty">正在连接星享服务…</div></main></div><div id="toast" role="status" class="toast" hidden></div><dialog id="reward-dialog"><div class="dialog-star">✦</div><div class="eyebrow">DEVELOPMENT ONLY</div><h2>一份明确的小奖励</h2><p id="reward-description"></p><div class="notice">这是3秒流程模拟，不请求广告、不产生收入。演示金币不可兑现。</div><div class="progress"><span id="demo-progress"></span></div><button class="button" id="reward-confirm">开始3秒演示</button><button class="button secondary" id="reward-cancel">取消并释放任务</button></dialog></body></html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#fff7f2" />
+    <title>悦享金币 · 元享式玩法开发版</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="/"
+          ><span class="logo">享</span
+          ><span>悦享金币<small>REWARDS EVERY DAY</small></span></a
+        >
+        <div class="nav-caption">我的金币乐园</div>
+        <nav id="navigation" aria-label="主要导航"></nav>
+        <div class="side-footer">
+          <i></i> 独立开发版 v0.3<a href="/admin">运营管理后台 ↗</a>
+        </div>
+      </aside>
+      <main id="app" aria-live="polite">
+        <div class="loading">正在连接金币账户…</div>
+      </main>
+    </div>
+    <dialog id="reward-dialog">
+      <div class="dialog-mark">开发联调</div>
+      <h2 id="reward-title"></h2>
+      <p id="reward-description"></p>
+      <div class="notice">
+        这是3秒显式模拟，不播放真实广告、不产生广告收益。金币不可兑现。
+      </div>
+      <div class="progress"><span id="reward-progress"></span></div>
+      <button class="button" id="reward-confirm">开始模拟流程</button
+      ><button class="button secondary" id="reward-cancel">
+        取消，保留已叠金币
+      </button>
+    </dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>

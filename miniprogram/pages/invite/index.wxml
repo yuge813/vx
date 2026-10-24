@@ -1,0 +1,52 @@
+<view class="page"
+  ><view class="eyebrow">INVITE WITH A CLEAR CONNECTION</view
+  ><view class="heading">邀请好友，一起体验。</view
+  ><view class="muted">只记录真实单层关系，现金返佣未开放。</view
+  ><view wx:if="{{error}}" class="error" bindtap="load"
+    >{{error}} · 点击重试</view
+  ><block wx:if="{{referral}}"
+    ><view class="card"
+      ><view class="title">我的邀请码</view
+      ><view class="invite-code">{{referral.code}}</view
+      ><button class="button" open-type="share">分享给好友</button
+      ><view class="caption space"
+        >分享由你主动发起。不强制分享，不以邀请换取提现资格。</view
+      ></view
+    ><view class="stats"
+      ><view class="stat"
+        ><view class="stat-value">{{referral.invitedCount}}</view
+        ><view class="caption">真实邀请 / 人</view></view
+      ><view class="stat"
+        ><view class="stat-value">{{referral.activeCount}}</view
+        ><view class="caption">完成任务 / 人</view></view
+      ></view
+    ><view class="card"
+      ><view class="title">绑定好友邀请码</view
+      ><view class="muted">注册24小时内可绑定一次，不支持更改或循环关系。</view
+      ><input
+        class="plan-input"
+        value="{{code}}"
+        bindinput="input"
+        maxlength="12"
+        placeholder="输入12位邀请码"
+        disabled="{{referral.bound}}"
+      /><button
+        class="button light"
+        disabled="{{busy || referral.bound || !code}}"
+        bindtap="bind"
+      >
+        {{referral.bound ? '已绑定，不能更改' : '绑定邀请码'}}
+      </button></view
+    ><view class="card"
+      ><view class="title">最近邀请记录</view
+      ><view wx:if="{{!referral.users.length}}" class="empty"
+        >没有邀请记录，不填造用户或收益。</view
+      ><view wx:for="{{referral.users}}" wx:key="id" class="list-item row"
+        ><text>用户 {{item.id}}</text
+        ><text class="pill"
+          >{{item.active ? '已完成任务' : '尚未完成任务'}}</text
+        ></view
+      ></view
+    ></block
+  ></view
+>
