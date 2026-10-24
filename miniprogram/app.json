@@ -1,0 +1,15 @@
+{
+  "pages": ["pages/home/index", "pages/chests/index", "pages/wallet/index", "pages/profile/index", "pages/records/index"],
+  "window": { "navigationBarTitleText": "星享成长", "navigationBarBackgroundColor": "#fffaf4", "navigationBarTextStyle": "black", "backgroundColor": "#fffaf4" },
+  "tabBar": {
+    "color": "#94867d", "selectedColor": "#ec633c", "backgroundColor": "#ffffff", "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/home/index", "text": "今日" },
+      { "pagePath": "pages/chests/index", "text": "宝箱" },
+      { "pagePath": "pages/wallet/index", "text": "钱包" },
+      { "pagePath": "pages/profile/index", "text": "我的" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

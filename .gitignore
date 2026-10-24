@@ -1,0 +1,6 @@
+.env
+data/
+coverage/
+node_modules/
+project.private.config.json
+*.log

@@ -1,0 +1,18 @@
+import { readdirSync, readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import assert from 'node:assert/strict';
+function files(root) { return readdirSync(root, { withFileTypes: true }).flatMap(entry => entry.isDirectory() ? files(join(root, entry.name)) : [join(root, entry.name)]); }
+let count = 0;
+for (const file of ['package.json', ...['server','web','scripts','tests','miniprogram'].flatMap(files)]) {
+  if (/\.(?:mjs|js)$/.test(file)) { execFileSync(process.execPath, ['--check', file], { stdio: 'pipe' }); count++; }
+  if (file.endsWith('.json')) { JSON.parse(readFileSync(file, 'utf8')); count++; }
+}
+const app = JSON.parse(readFileSync('miniprogram/app.json', 'utf8'));
+for (const page of app.pages) {
+  for (const extension of ['.js','.json','.wxml']) assert.ok(existsSync('miniprogram/' + page + extension), `页面缺少文件 ${page + extension}`);
+  const xml = readFileSync('miniprogram/' + page + '.wxml', 'utf8'), js = readFileSync('miniprogram/' + page + '.js', 'utf8');
+  assert.doesNotMatch(xml, /<(?:br|div|span|p|script)(?:\s|\/?>)/, 'WXML不应包含HTML标签');
+  for (const match of xml.matchAll(/bind(?:tap|input|confirm)="([A-Za-z]+)"/g)) assert.match(js, new RegExp('\\b' + match[1] + '\\s*\\('), `事件处理函数缺失 ${page}:${match[1]}`);
+}
+console.log(`语法与JSON检查通过：${count}个文件；${app.pages.length}个小程序页面文件及事件引用检查通过。此检查不替代微信开发者工具编译。`);
