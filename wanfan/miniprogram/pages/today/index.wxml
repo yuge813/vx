@@ -1,0 +1,158 @@
+<view class="page"
+  ><view class="eyebrow">A GOOD DINNER, A BETTER EVERYDAY</view
+  ><view class="heading">今天这顿，安排好了。</view
+  ><view class="muted">少一点纠结，多一点家常的好滋味。</view
+  ><view wx:if="{{error}}" class="error" bindtap="load"
+    >{{error}} · 点击重试</view
+  ><block wx:if="{{d}}"
+    ><view class="toolbar"
+      ><view class="row"
+        ><picker
+          class="picker"
+          range="{{servings}}"
+          value="{{servingIndex}}"
+          bindchange="serving"
+          ><view>{{servings[servingIndex]}}人吃饭 ▾</view></picker
+        ><picker
+          class="picker"
+          range="{{times}}"
+          value="{{timeIndex}}"
+          bindchange="time"
+          ><view>{{times[timeIndex]}}分钟内 ▾</view></picker
+        ><button class="button light small" disabled="{{busy}}" bindtap="save">
+          更新偏好
+        </button></view
+      ><view class="row" style="margin-top: 18rpx"
+        ><text class="caption">蛋奶素食</text
+        ><switch
+          checked="{{vegetarian}}"
+          bindchange="vegetarian"
+          color="#849c6d"
+          style="
+            transform: scale(0.75);
+            transform-origin: right center;
+          " /></view
+    ></view>
+    <view class="row section"
+      ><text class="title">今晚，试试这道</text
+      ><text class="link" bindtap="rotate">换一组 ↻</text></view
+    ><view wx:if="{{!d.recommendations.length}}" class="empty"
+      >当前偏好下没有可用菜谱，请增加准备时间或调整口味。</view
+    ><view
+      wx:for="{{d.recommendations}}"
+      wx:key="id"
+      wx:if="{{index === 0}}"
+      class="card feature"
+      ><view class="hero-art"
+        ><image src="/assets/{{item.art}}.png" mode="aspectFit" /><view
+          class="row hero-badge"
+          ><text class="pill"
+            >{{d.pantry.length ? '参考已记录的食材' : '按用时与口味推荐'}}</text
+          ><text class="caption">内部原型</text></view
+        ></view
+      ><view class="feature-body"
+        ><view class="eyebrow">一顿家常饭的提案</view
+        ><view class="recipe-title">{{item.title}}</view
+        ><view class="muted">{{item.subtitle}}</view
+        ><view class="meta"
+          ><text>{{item.minutes}}分钟</text><text>{{item.servings}}人份</text
+          ><text>{{item.vegetarian ? '蛋奶素食' : '家常荤菜'}}</text></view
+        ><text class="link" data-id="{{item.id}}" bindtap="recipe"
+          >完整做法，免费查看 →</text
+        ><button
+          class="button"
+          data-id="{{item.id}}"
+          disabled="{{busy}}"
+          bindtap="plan"
+        >
+          就吃这道，加入今晚菜单 →
+        </button></view
+      ></view
+    >
+    <view class="section title">也可以换个口味</view
+    ><view class="alt-grid"
+      ><view
+        wx:for="{{d.recommendations}}"
+        wx:key="id"
+        wx:if="{{index > 0}}"
+        class="card alt"
+        data-id="{{item.id}}"
+        bindtap="recipe"
+        ><image src="/assets/{{item.art}}.png" mode="aspectFit" /><view
+          class="alt-body"
+          ><view class="title">{{item.title}}</view
+          ><view class="meta"
+            >{{item.minutes}}分钟 · {{item.servings}}人份</view
+          ></view
+        ></view
+      ></view
+    ><view class="caption section"
+      >菜谱为原创开发稿，待人工烹饪校对。时间为估算，请检查食材并充分煮熟。</view
+    >
+    <view class="card"
+      ><view class="row"
+        ><text class="title">我的今晚菜单</text
+        ><text class="pill">{{d.plans.length}}道</text></view
+      ><view wx:if="{{!d.plans.length}}" class="empty"
+        >挑一道喜欢的菜，今晚就有了安排。</view
+      ><view wx:for="{{d.plans}}" wx:key="id" class="plan"
+        ><view class="row"
+          ><image src="/assets/{{item.recipe.art}}.png" mode="aspectFit" /><view
+            class="plan-info"
+            data-id="{{item.recipe_id}}"
+            bindtap="recipe"
+            ><view class="title">{{item.recipe.title}}</view
+            ><view class="caption"
+              >{{item.servings}}人份 · {{item.state === 'completed' ? '已完成' :
+              '今晚待做'}}</view
+            ></view
+          ></view
+        ><view
+          wx:if="{{item.state === 'planned'}}"
+          class="row"
+          style="margin-top: 18rpx"
+          ><button
+            class="button light small"
+            data-id="{{item.id}}"
+            disabled="{{busy}}"
+            bindtap="complete"
+          >
+            这顿做完了</button
+          ><text class="link" data-id="{{item.id}}" bindtap="remove"
+            >移除菜单</text
+          ></view
+        ></view
+      ><button
+        wx:if="{{d.plans.length}}"
+        class="button outline"
+        bindtap="shopping"
+      >
+        查看今天的缺料清单 →
+      </button></view
+    >
+    <view class="card"
+      ><view class="row"
+        ><text class="title">给日常留个印记</text
+        ><text class="pill">连续{{d.user.streak}}天</text></view
+      ><view class="week"
+        ><view wx:for="{{d.user.week}}" wx:key="date" class="day"
+          ><view class="day-dot {{item.signed ? 'signed' : ''}}"
+            >{{item.signed ? '✓' : item.dayNumber}}</view
+          ><text>{{item.label}}</text></view
+        ></view
+      ><button
+        class="button light"
+        disabled="{{busy || d.user.signedToday}}"
+        bindtap="checkin"
+      >
+        {{d.user.signedToday ? '今日已签到' : '免费签到，记下今天'}}
+      </button></view
+    ><view class="card sage"
+      ><view class="title">把手头的食材，<view>用在今天的餐桌上。</view></view
+      ><view class="muted section">录入真实库存，让下一顿饭更好安排。</view
+      ><button class="button outline" bindtap="pantry">
+        打开食材冰箱 →
+      </button></view
+    ></block
+  ><view class="footer">晚饭有谱 · 好好吃饭，慢慢生活</view></view
+>

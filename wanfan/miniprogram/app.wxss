@@ -1,0 +1,377 @@
+page {
+  background: #f6f4ed;
+  color: #283e33;
+  font-family: -apple-system, "PingFang SC", sans-serif;
+  font-size: 28rpx;
+}
+view,
+text,
+input,
+button,
+picker {
+  box-sizing: border-box;
+}
+.page {
+  padding: 32rpx 32rpx calc(50rpx + env(safe-area-inset-bottom));
+}
+.eyebrow {
+  font-size: 18rpx;
+  color: #91a080;
+  letter-spacing: 3rpx;
+}
+.heading {
+  font-family: "Noto Serif CJK SC", "Songti SC", serif;
+  font-size: 53rpx;
+  font-weight: 750;
+  line-height: 1.5;
+  margin: 20rpx 0 14rpx;
+  letter-spacing: -2rpx;
+}
+.muted {
+  font-size: 23rpx;
+  color: #939e87;
+  line-height: 1.9;
+}
+.caption {
+  font-size: 20rpx;
+  color: #a1ab94;
+  line-height: 1.9;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18rpx;
+}
+.card {
+  border: 1rpx solid #e0e6d7;
+  border-radius: 32rpx;
+  background: #fffef9;
+  padding: 32rpx;
+  margin: 28rpx 0;
+}
+.title {
+  font-size: 31rpx;
+  font-weight: 700;
+}
+.section {
+  margin: 30rpx 0 22rpx;
+}
+.pill {
+  font-size: 20rpx;
+  background: #eaf0e0;
+  color: #81906e;
+  border-radius: 50rpx;
+  padding: 8rpx 17rpx;
+  white-space: nowrap;
+}
+.pill.warm {
+  background: #f6ebd9;
+  color: #aa8b5d;
+}
+.button {
+  background: #244d3d;
+  color: #fffef9;
+  border: 1rpx solid #244d3d;
+  border-radius: 19rpx;
+  font-size: 25rpx;
+  font-weight: 650;
+  line-height: 78rpx;
+  margin: 24rpx 0 0;
+  padding: 0 22rpx;
+}
+.button:after {
+  border: 0;
+}
+.button[disabled] {
+  opacity: 0.45;
+  background: #d3dbc9;
+  color: #6d7e5d;
+  border-color: #d3dbc9;
+}
+.button.light {
+  background: #edf1e5;
+  color: #587347;
+  border-color: #dce4d0;
+}
+.button.outline {
+  background: transparent;
+  color: #789067;
+  border-color: #cfdac0;
+}
+.button.small {
+  font-size: 22rpx;
+  line-height: 58rpx;
+  margin: 0;
+}
+.link {
+  font-size: 22rpx;
+  color: #859a71;
+}
+.toolbar {
+  background: #eeeee3;
+  border: 1rpx solid #e3e6d6;
+  padding: 20rpx;
+  border-radius: 22rpx;
+  margin: 26rpx 0;
+}
+.picker {
+  font-size: 23rpx;
+  color: #577345;
+  min-width: 95rpx;
+}
+.feature {
+  padding: 0;
+  overflow: hidden;
+}
+.hero-art {
+  background: #eaf0df;
+  position: relative;
+  height: 430rpx;
+}
+.hero-art image {
+  width: 100%;
+  height: 430rpx;
+}
+.hero-badge {
+  position: absolute;
+  top: 23rpx;
+  left: 26rpx;
+  right: 26rpx;
+}
+.feature-body {
+  padding: 30rpx 32rpx 34rpx;
+}
+.recipe-title {
+  font-family: "Noto Serif CJK SC", "Songti SC", serif;
+  font-size: 44rpx;
+  font-weight: 700;
+  line-height: 1.6;
+  margin: 12rpx 0;
+}
+.meta {
+  font-size: 22rpx;
+  color: #8d9c7b;
+  display: flex;
+  gap: 23rpx;
+  flex-wrap: wrap;
+  margin: 18rpx 0;
+}
+.alt-grid {
+  display: flex;
+  gap: 20rpx;
+}
+.alt {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  margin: 0;
+}
+.alt image {
+  width: 100%;
+  height: 220rpx;
+  background: #eef1e5;
+}
+.alt-body {
+  padding: 20rpx 20rpx 25rpx;
+}
+.alt .title {
+  font-size: 25rpx;
+}
+.plan {
+  padding: 23rpx 0;
+  border-bottom: 1rpx solid #ecf0e3;
+}
+.plan:last-child {
+  border: 0;
+}
+.plan image {
+  width: 100rpx;
+  height: 88rpx;
+  border-radius: 16rpx;
+  background: #eef1e4;
+  flex-shrink: 0;
+}
+.plan-info {
+  flex: 1;
+  min-width: 0;
+}
+.plan-info .title {
+  font-size: 26rpx;
+}
+.empty {
+  border: 1rpx dashed #d9e2cb;
+  border-radius: 23rpx;
+  padding: 36rpx 25rpx;
+  text-align: center;
+  color: #9ca88b;
+  font-size: 24rpx;
+  line-height: 1.9;
+  margin: 25rpx 0;
+}
+.notice {
+  background: #f5efe0;
+  color: #a09071;
+  border-radius: 20rpx;
+  padding: 22rpx 25rpx;
+  font-size: 21rpx;
+  line-height: 1.9;
+  margin: 25rpx 0;
+}
+.field {
+  background: #fffef8;
+  border: 1rpx solid #dbe4cf;
+  border-radius: 17rpx;
+  padding: 20rpx 23rpx;
+  font-size: 25rpx;
+  height: 80rpx;
+  width: 100%;
+}
+.field-label {
+  font-size: 23rpx;
+  color: #8a9a78;
+  margin: 24rpx 0 12rpx;
+}
+.ingredient {
+  padding: 26rpx 0;
+  border-bottom: 1rpx solid #e9eedf;
+}
+.ingredient:last-child {
+  border: 0;
+}
+.symbol {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #eaf0dd;
+  color: #91a27c;
+  font-family: serif;
+  font-size: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.expired {
+  color: #b78b69;
+}
+.week {
+  display: flex;
+  justify-content: space-between;
+  margin: 30rpx 0;
+}
+.day {
+  text-align: center;
+  font-size: 19rpx;
+  color: #a0ac8e;
+}
+.day-dot {
+  width: 58rpx;
+  height: 58rpx;
+  line-height: 56rpx;
+  border: 1rpx solid #dce5cd;
+  border-radius: 50%;
+  font-size: 24rpx;
+  color: #a4b18f;
+  margin-bottom: 12rpx;
+}
+.day-dot.signed {
+  color: white;
+  background: #849c6d;
+  border-color: #849c6d;
+}
+.stats {
+  display: flex;
+  gap: 18rpx;
+  margin: 28rpx 0;
+}
+.stat {
+  flex: 1;
+  background: #fffef8;
+  border: 1rpx solid #e1e8d6;
+  border-radius: 25rpx;
+  padding: 26rpx 18rpx;
+}
+.stat-value {
+  font-family: Georgia, serif;
+  font-size: 55rpx;
+  color: #71895c;
+  line-height: 1.4;
+}
+.stat .caption {
+  font-size: 19rpx;
+}
+.check {
+  width: 39rpx;
+  height: 39rpx;
+  line-height: 36rpx;
+  text-align: center;
+  border: 1rpx solid #cad9b8;
+  border-radius: 12rpx;
+  font-size: 25rpx;
+  color: white;
+  flex-shrink: 0;
+}
+.check.checked {
+  background: #244d3d;
+  border-color: #244d3d;
+}
+.checked-text {
+  text-decoration: line-through;
+  color: #aab59b;
+}
+.quantity {
+  font-family: Georgia, serif;
+  color: #81946b;
+  font-size: 34rpx;
+}
+.step {
+  display: flex;
+  gap: 23rpx;
+  margin: 24rpx 0;
+  padding-bottom: 24rpx;
+  border-bottom: 1rpx solid #edf1e4;
+  font-size: 25rpx;
+  color: #7f906c;
+  line-height: 1.9;
+}
+.step-number {
+  font-family: Georgia, serif;
+  font-size: 40rpx;
+  color: #a3b28e;
+  flex-shrink: 0;
+}
+.sage {
+  background: #e8eddd;
+  border-color: #dce5ce;
+}
+.sage .title {
+  font-family: serif;
+  font-size: 39rpx;
+  line-height: 1.6;
+}
+.profile-link {
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid #e9eedf;
+  font-size: 25rpx;
+  color: #82966b;
+}
+.profile-link:last-child {
+  border: 0;
+}
+.footer {
+  text-align: center;
+  font-size: 18rpx;
+  color: #afb99e;
+  letter-spacing: 2rpx;
+  margin: 40rpx 0;
+}
+.error {
+  background: #f8eee2;
+  color: #ad825d;
+  padding: 24rpx;
+  border-radius: 20rpx;
+  font-size: 23rpx;
+  line-height: 1.8;
+}

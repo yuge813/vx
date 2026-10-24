@@ -1,0 +1,41 @@
+<view class="page"
+  ><view class="eyebrow">LESS GUESSING, A BETTER SHOPPING LIST</view
+  ><view class="heading">少买一点，刚好够吃。</view
+  ><view class="muted">按今天待做菜单计算，扣除记录的未过日期库存。</view
+  ><view wx:if="{{error}}" class="error" bindtap="load"
+    >{{error}} · 点击重试</view
+  ><block wx:if="{{d}}"
+    ><view class="card"
+      ><view class="row"
+        ><text class="title">今天的缺料清单</text
+        ><text class="pill"
+          >{{checked}} / {{d.shopping.length}} 已勾选</text
+        ></view
+      ><view wx:if="{{!d.shopping.length}}" class="empty"
+        >还没有缺料。先选今晚菜单，或检查记录的库存是否够用。<button
+          class="button light"
+          bindtap="today"
+        >
+          去选今晚菜单
+        </button></view
+      ><view
+        wx:for="{{d.shopping}}"
+        wx:key="id"
+        class="ingredient row"
+        data-id="{{item.id}}"
+        bindtap="toggle"
+        ><view class="check {{item.checked ? 'checked' : ''}}"
+          >{{item.checked ? '✓' : ''}}</view
+        ><text class="plan-info {{item.checked ? 'checked-text' : ''}}"
+          >{{item.name}}</text
+        ><text class="quantity"
+          >{{item.missing}}<text class="caption"> {{item.unit}}</text></text
+        ></view
+      ><view class="notice"
+        >勾选只记录采购进度，不自动增加库存。实际买到后，请在食材冰箱更新数量；用料增加时会重新提示采购。</view
+      ><button class="button outline" bindtap="pantry">
+        更新食材冰箱 →
+      </button></view
+    ></block
+  ></view
+>

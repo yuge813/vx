@@ -1,0 +1,29 @@
+{
+  "pages": [
+    "pages/today/index",
+    "pages/pantry/index",
+    "pages/shopping/index",
+    "pages/journal/index",
+    "pages/recipe/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "晚饭有谱",
+    "navigationBarBackgroundColor": "#f6f4ed",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f6f4ed"
+  },
+  "tabBar": {
+    "color": "#919d83",
+    "selectedColor": "#244d3d",
+    "backgroundColor": "#fffef8",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/today/index", "text": "今日晚餐" },
+      { "pagePath": "pages/pantry/index", "text": "食材冰箱" },
+      { "pagePath": "pages/shopping/index", "text": "采购清单" },
+      { "pagePath": "pages/journal/index", "text": "我的日常" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,46 @@
+[
+  {
+    "name": "运营规范入口",
+    "url": "https://developers.weixin.qq.com/miniprogram/product/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "name": "激励视频接口",
+    "url": "https://developers.weixin.qq.com/miniprogram/dev/api/ad/wx.createRewardedVideoAd.html",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "name": "广告组件",
+    "url": "https://developers.weixin.qq.com/miniprogram/dev/component/ad.html",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "name": "隐私指南",
+    "url": "https://developers.weixin.qq.com/miniprogram/dev/framework/user-privacy/PrivacyAuthorize.html",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "name": "广告平台",
+    "url": "https://ad.weixin.qq.com/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "name": "微信支付",
+    "url": "https://pay.weixin.qq.com/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "name": "官方接口定义版本",
+    "url": "https://api.github.com/repos/wechat-miniprogram/api-typings/commits/master",
+    "status": 200,
+    "sha": "6092df9100c73b84e140c20b9a42a8e8799e0660",
+    "date": "2026-09-01T12:25:38Z"
+  },
+  {
+    "name": "官方示例版本",
+    "url": "https://api.github.com/repos/wechat-miniprogram/miniprogram-demo/commits/master",
+    "status": 200,
+    "sha": "0fe5c7df8e90582dd0b89e283df7fe32e04413f9",
+    "date": "2026-09-03T05:27:05Z"
+  }
+]

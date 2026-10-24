@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>晚饭有谱 · 内容运营</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/admin.js" type="module"></script>
+  </head>
+  <body>
+    <main class="admin-layout">
+      <header class="admin-heading">
+        <a class="brand" href="/">晚饭有谱 <small>内容与运营</small></a>
+        <div>
+          <a class="button small outline" href="/">返回用户端</a
+          ><button class="button small light" id="logout" hidden>退出</button>
+        </div>
+      </header>
+      <div class="notice">
+        内部验证：广告、现金及实物兑换关闭。测试权益只由管理员授予，不模拟广告成功。指标来自当前数据库样本，不代表市场表现。
+      </div>
+      <section class="card admin-login" id="login">
+        <div class="eyebrow">AUTHORIZED OPERATIONS</div>
+        <h1>把日常，做得更好。</h1>
+        <p class="muted">
+          使用独立配置.env.wanfan中的ADMIN_TOKEN。令牌仅保留在当前页面内存。
+        </p>
+        <form id="login-form">
+          <label class="field-label" for="admin-token">管理员令牌</label
+          ><input
+            type="password"
+            id="admin-token"
+            class="field"
+            minlength="32"
+            required
+            autocomplete="off"
+          />
+          <p class="caption" id="login-error" role="alert"></p>
+          <button class="button full" type="submit">进入内容运营</button>
+        </form>
+      </section>
+      <div id="dashboard" hidden></div>
+    </main>
+    <div class="toast" id="toast" role="status" hidden></div>
+  </body>
+</html>

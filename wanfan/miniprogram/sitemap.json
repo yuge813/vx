@@ -1,0 +1,4 @@
+{
+  "desc": "内部原型不参与搜索",
+  "rules": [{ "action": "disallow", "page": "*" }]
+}

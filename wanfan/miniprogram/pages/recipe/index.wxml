@@ -1,0 +1,50 @@
+<view class="page"
+  ><view wx:if="{{error}}" class="error" bindtap="load"
+    >{{error}} · 点击重试</view
+  ><block wx:if="{{r}}"
+    ><view class="eyebrow">RECIPE / 家常的好味道</view
+    ><view class="card feature"
+      ><view class="hero-art"
+        ><image src="/assets/{{r.art}}.png" mode="aspectFit" /></view
+      ><view class="feature-body"
+        ><view class="recipe-title">{{r.title}}</view
+        ><view class="muted">{{r.subtitle}}</view
+        ><view class="meta"
+          >{{r.minutes}}分钟 · {{r.servings}}人份 · {{r.vegetarian ? '蛋奶素食'
+          : '家常荤菜'}}</view
+        ><button
+          class="button outline small"
+          disabled="{{busy}}"
+          bindtap="favorite"
+        >
+          {{r.favorite ? '已收藏 · 点击取消' : '收藏这份好味道'}}
+        </button></view
+      ></view
+    ><view class="card"
+      ><view class="title">准备这些就好</view
+      ><view class="caption">按{{r.servings}}人份换算</view
+      ><view wx:for="{{r.ingredients}}" wx:key="id" class="ingredient row"
+        ><view
+          ><view>{{item.name}}</view
+          ><view class="caption"
+            >{{item.missing ? '还缺 ' + item.missing + item.unit :
+            '记录库存够用'}}</view
+          ></view
+        ><text class="quantity"
+          >{{item.amount}}<text class="caption"> {{item.unit}}</text></text
+        ></view
+      ></view
+    ><view class="card"
+      ><view class="title">一步步，慢慢来</view
+      ><view wx:for="{{r.steps}}" wx:key="*this" class="step"
+        ><text class="step-number">{{index + 1}}</text
+        ><text>{{item}}</text></view
+      ><view class="notice">{{r.tips}}</view
+      ><view class="caption"
+        >{{r.source}} · {{r.reviewStatus}}。留意个人过敏原及调味料配料。</view
+      ><button class="button" disabled="{{busy}}" bindtap="plan">
+        就吃这道，加入今晚菜单 →
+      </button></view
+    ></block
+  ></view
+>

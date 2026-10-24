@@ -1,0 +1,60 @@
+<view class="page"
+  ><view class="eyebrow">A LITTLE ORDER IN YOUR KITCHEN</view
+  ><view class="heading">打开冰箱，心里有数。</view
+  ><view class="muted">记下手头食材，下一顿饭更好安排。</view
+  ><view wx:if="{{error}}" class="error" bindtap="load"
+    >{{error}} · 点击重试</view
+  ><block wx:if="{{d}}"
+    ><view class="card"
+      ><view class="title">加一点厨房的底气</view
+      ><view class="field-label">食材</view
+      ><picker
+        range="{{names}}"
+        value="{{ingredientIndex}}"
+        bindchange="ingredient"
+        ><view class="field">{{names[ingredientIndex]}} ▾</view></picker
+      ><view class="field-label"
+        >数量 · {{d.config.ingredients[ingredientIndex].unit}}</view
+      ><input
+        class="field"
+        type="digit"
+        value="{{amount}}"
+        bindinput="amount"
+      /><view class="field-label">自设到期日（可不填）</view
+      ><picker mode="date" value="{{expires}}" bindchange="date"
+        ><view class="field"
+          >{{expires || '选择你希望记录的日期'}}</view
+        ></picker
+      ><text wx:if="{{expires}}" class="link" bindtap="clearDate">清空日期</text
+      ><button class="button" disabled="{{busy}}" bindtap="save">
+        保存食材记录</button
+      ><view class="caption section"
+        >保存会更新该食材数量。日期为你输入的提醒，不是食品安全判断。</view
+      ></view
+    ><view class="section row"
+      ><text class="title">已记录{{d.pantry.length}}种食材</text
+      ><text class="caption">真实记录，随时更新</text></view
+    ><view wx:if="{{!d.pantry.length}}" class="empty"
+      >从一颗番茄、一盒鸡蛋开始，不需要拍照或授权相册。</view
+    ><view class="card"
+      ><view wx:for="{{d.pantry}}" wx:key="id" class="ingredient"
+        ><view class="row"
+          ><view class="symbol">{{item.symbol}}</view
+          ><view class="plan-info"
+            ><view class="title"
+              >{{item.name}} · {{item.amount}}{{item.unit}}</view
+            ><view class="caption {{item.expired ? 'expired' : ''}}"
+              >{{item.expires ? (item.expired ? '已过自设日期 · ' : '自设日期 ·
+              ') + item.expires : '未设日期'}}</view
+            ></view
+          ><text class="link" data-id="{{item.id}}" bindtap="edit">修改</text
+          ><text class="link" data-id="{{item.id}}" bindtap="remove"
+            >移除</text
+          ></view
+        ></view
+      ></view
+    ><view class="notice"
+      >过自设日期的食材不计入可用库存。请自行检查实际新鲜度，不使用变质食材。</view
+    ></block
+  ></view
+>

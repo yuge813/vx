@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#f6f4ed" />
+    <title>晚饭有谱 · 好好吃饭，慢慢生活</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <a class="brand" href="/"
+          ><svg viewBox="0 0 40 40" aria-hidden="true">
+            <path
+              d="M6 20h28c-2 11-8 15-14 15S8 31 6 20Z"
+              fill="currentColor"
+            />
+            <path
+              d="m12 13 2-5m6 5 2-8m6 8 2-5"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            /></svg
+          ><span>晚饭有谱<small>THE EVERYDAY TABLE</small></span></a
+        >
+        <p class="nav-label">好好吃饭的日常</p>
+        <nav id="navigation" aria-label="主要导航"></nav>
+        <div class="side-bottom">
+          <span class="dot"></span> 内部原型 · 商业能力关闭<a href="/admin"
+            >内容与运营后台 ↗</a
+          >
+        </div>
+      </aside>
+      <main id="app" aria-live="polite">
+        <div class="loading">
+          <span></span>
+          <p>正在为今晚准备一张餐桌…</p>
+        </div>
+      </main>
+    </div>
+    <dialog id="recipe-dialog" aria-labelledby="recipe-title">
+      <div id="recipe-content"></div>
+    </dialog>
+    <dialog id="text-dialog">
+      <form id="text-form">
+        <div class="row">
+          <h2 id="text-title"></h2>
+          <button
+            class="icon-button"
+            type="button"
+            data-close="text-dialog"
+            aria-label="关闭"
+          >
+            ×
+          </button>
+        </div>
+        <p class="muted" id="text-description"></p>
+        <textarea
+          id="text-value"
+          class="field"
+          rows="4"
+          maxlength="1000"
+          minlength="2"
+          required
+          placeholder="写下具体问题，方便处理"
+        ></textarea
+        ><button class="button" type="submit">提交反馈</button>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" hidden></div>
+  </body>
+</html>

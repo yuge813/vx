@@ -1,16 +1,21 @@
 {
-  "name": "xingxiang-miniapp",
-  "version": "0.1.0",
+  "name": "wanfan-youpu",
+  "version": "0.2.0",
   "private": true,
-  "description": "星享成长：微信小程序与广告奖励开发原型（不提供真实广告及支付）",
+  "description": "晚饭有谱：晚餐决策、库存采购和真实日常记录；商业能力默认关闭",
   "type": "module",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
-    "setup": "node scripts/setup.mjs",
-    "start": "node --env-file-if-exists=.env server/index.mjs",
-    "dev": "node --env-file-if-exists=.env --watch server/index.mjs",
-    "test": "node --test tests/*.test.mjs",
-    "check": "node scripts/check.mjs",
-    "test:browser": "node scripts/browser-smoke.mjs"
+    "setup": "node wanfan/scripts/setup.mjs",
+    "start": "node --env-file-if-exists=.env.wanfan wanfan/server/index.mjs",
+    "dev": "node --env-file-if-exists=.env.wanfan --watch wanfan/server/index.mjs",
+    "test": "node --test tests/*.test.mjs wanfan/tests/*.test.mjs",
+    "check": "node scripts/check.mjs && node wanfan/scripts/check.mjs",
+    "test:browser": "node wanfan/scripts/browser.mjs",
+    "legacy:setup": "node scripts/setup.mjs",
+    "legacy:start": "node --env-file-if-exists=.env server/index.mjs",
+    "legacy:test:browser": "node scripts/browser-smoke.mjs"
   }
 }

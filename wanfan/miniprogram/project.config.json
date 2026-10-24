@@ -1,0 +1,15 @@
+{
+  "description": "晚饭有谱内部原型；广告与支付关闭",
+  "appid": "touristappid",
+  "projectname": "wanfan-youpu",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "./",
+  "libVersion": "3.7.7",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true
+  }
+}

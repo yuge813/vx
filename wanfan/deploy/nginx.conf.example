@@ -1,0 +1,16 @@
+# 模板：修改域名与证书；PUBLIC_ORIGIN必须与外部HTTPS源站一致。
+# 不要覆盖已有站点。检查 nginx -t 后再加载。真实商业能力依然关闭。
+server {
+    listen 443 ssl;
+    server_name dinner.example.com;
+    ssl_certificate /etc/letsencrypt/live/dinner.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dinner.example.com/privkey.pem;
+    client_max_body_size 16k;
+    location / {
+        proxy_pass http://127.0.0.1:8790;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_read_timeout 20s;
+    }
+}

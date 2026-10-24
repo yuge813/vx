@@ -1,0 +1,23 @@
+[Unit]
+Description=Wanfan Youpu prototype service
+After=network.target
+
+[Service]
+Type=simple
+User=wanfan
+Group=wanfan
+WorkingDirectory=/opt/wanfan
+# 修改为服务器实际Node.js 24路径，确保.env.wanfan和data目录归该服务账户。
+ExecStart=/usr/bin/node --env-file=/opt/wanfan/.env.wanfan /opt/wanfan/wanfan/server/index.mjs
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/wanfan/data
+
+[Install]
+WantedBy=multi-user.target
