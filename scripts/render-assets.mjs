@@ -28,7 +28,7 @@ try {
       join("miniprogram/assets", name.replace(".svg", ".png")),
     );
   }
-  console.log("3幅原创玩法插画及8幅原生导航图标已渲染为PNG。");
+  console.log("3幅原创玩法插画及10幅原生导航图标已渲染为PNG。");
 } finally {
   await browser?.close();
   await new Promise((r) => server.close(r));

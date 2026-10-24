@@ -38,7 +38,7 @@ for (const page of app.pages) {
     "WXML不应包含HTML标签",
   );
   for (const match of xml.matchAll(
-    /bind(?:tap|input|confirm|change)="([A-Za-z]+)"/g,
+    /(?:bind|catch)(?:tap|input|confirm|change|scroll)="([A-Za-z]+)"/g,
   ))
     assert.match(
       js,

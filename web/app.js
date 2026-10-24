@@ -10,14 +10,15 @@ const state = {
   support: [],
   busy: false,
   hidden: {},
-  groupFilter: "all",
+  adHidden: false,
   walletCoins: 1000,
   offset: 0,
 };
 const nav = [
   ["home", "home", "首页"],
-  ["group", "packet", "红包群"],
-  ["bag", "bag", "幸运福袋"],
+  ["group", "packet", "红包"],
+  ["bag", "video", "视频"],
+  ["invite", "invite", "邀请"],
   ["profile", "profile", "我的"],
 ];
 const orderLabels = {
@@ -160,44 +161,35 @@ function home() {
       )}</div><section class="card"><div class="row"><h2>最近金币动态</h2><button class="link" data-nav="records">全部流水 ${icon("arrow")}</button></div>${recentLedger()}</section></div><aside><section class="card art-card"><div class="row"><h2>红包群正在等你</h2><span class="pill">可叠至${c.packetCap}</span></div><img src="/assets/packet.svg" alt="原创红包插画"><div class="reward-value">${state.group.banks.find((b) => b.kind === "redpacket")?.coins || 0}<small>当前待领金币</small></div><p class="muted">觉得少可以暂不打开，继续等待下一轮。金额由服务端累计，并有预算预留。</p><button class="button full" data-nav="group">进入红包群 ${icon("arrow")}</button></section><section class="card"><h2>每一笔，清清楚楚</h2><ol class="steps"><li><b>1</b><span>先确认基础奖励和补贴，再自主参与。</span></li><li><b>2</b><span>开发模拟成功后，服务端只记账一次。</span></li><li><b>3</b><span>演示提现先冻结，驳回退回，绝不显示虚假微信到账。</span></li></ol></section>${u.pendingTask ? '<button class="button secondary full" data-action="resume">继续未完成的任务</button>' : ""}</aside></div>`
   );
 }
-function bankCard(b) {
-  const key = b.generation + ":" + b.coins,
-    saved = state.hidden[b.kind] === key;
+function roomPacket(b) {
+  const saved = state.hidden[b.kind] === b.generation + ":" + b.coins;
   if (saved)
-    return `<section class="card bank saved"><div class="saved-symbol">${icon("lock")}</div><h3>${b.title}已暂存</h3><div class="reward-value" style="margin-top:12px">${b.coins}<small>金币</small></div><p class="caption">金额保留，下一轮可以继续叠包。</p><button class="button outline" data-restore="${b.kind}">查看暂存包</button></section>`;
-  return `<section class="card bank" data-bank="${b.kind}"><div class="row bank-head"><h3>${b.title}</h3><button class="close-bank" data-skip="${b.kind}" ${!b.coins || b.locked ? "disabled" : ""} aria-label="暂不打开${b.title}">×</button></div><div class="bank-art"><img src="/assets/${b.kind === "redpacket" ? "packet" : "chest"}.svg" alt="${b.title}原创插画"></div><div class="bank-body"><div class="reward-value">${b.coins}<small>待领金币</small></div><div class="caption">本轮上限${b.cap} · 每轮＋${b.increment}</div><div class="countdown" data-timer="${b.kind}">02:00</div><div class="progress"><span data-bank-progress="${b.kind}"></span></div><button class="button full" data-claim="${b.kind}" ${!canClaim(b.kind, b) ? "disabled" : ""}>${b.locked ? "继续打开任务" : b.coins ? "打开领取（模拟）" : "等待生成第一包"}</button><div class="caption" style="margin-top:9px">${b.atCap ? "已达本轮上限，可选择打开" : b.paused ? "新增累计暂停，请查看额度或账户状态" : "点右上角×可暂存，金额不会减少"}</div></div></section>`;
+    return `<div class="chat-saved" data-bank="${b.kind}"><div>已暂存 <strong>${b.coins}金币</strong></div><small>金额保留，下一轮继续叠加。</small><button class="link" data-restore="${b.kind}">查看暂存${b.kind === "redpacket" ? "红包" : "宝箱"}</button></div>`;
+  const ready = b.coins > 0;
+  return `<div class="chat-packet ${b.kind === "treasure" ? "is-treasure" : ""} ${!ready ? "is-waiting" : ""}" data-bank="${b.kind}"><button class="packet-open" data-claim="${b.kind}" ${!canClaim(b.kind, b) ? "disabled" : ""}><img src="/assets/${b.kind === "redpacket" ? "packet" : "chest"}.svg" alt=""><span class="packet-copy"><strong>${ready ? (b.kind === "redpacket" ? "恭喜发财，大吉大利" : "宝箱已准备，惊喜等你开") : b.kind === "redpacket" ? "下一份红包正在准备" : "下一份宝箱正在准备"}</strong><span>${b.locked ? "继续上次领取任务" : ready ? (b.kind === "redpacket" ? "点击领取红包" : "点击开启宝箱") : "倒计时结束后生成待领金额"}</span><b class="reward-value">${b.coins}<small> 金币</small></b></span></button>${ready && !b.locked ? `<button class="packet-close" data-skip="${b.kind}" aria-label="暂不打开，继续叠加">×</button>` : ""}<div class="packet-bottom"><span>${ready ? "开发奖励 · 非现金到账" : "系统准备中"}</span><span data-timer="${b.kind}"></span></div><div class="packet-track"><span data-bank-progress="${b.kind}"></span></div></div><div class="packet-hint">${b.atCap ? "已达本轮上限，可选择打开" : b.paused ? "新增累计暂停，已叠金币保留" : `每轮＋${b.increment} · 本轮上限${b.cap}`}</div>`;
+}
+function roomMessage(row) {
+  if (row.type === "ad" && state.adHidden) return "";
+  const avatar = `<div class="room-avatar avatar-${row.type === "packet" ? row.bank.kind : row.type}">${esc(row.mark)}</div>`;
+  const head = `<div class="message-head"><span>${esc(row.actor)}</span>${row.createdAt ? `<time>${shortTime(row.createdAt)}</time>` : "<small>系统</small>"}</div>`;
+  let body;
+  if (row.type === "packet") body = roomPacket(row.bank);
+  else if (row.type === "ad")
+    body = `<div class="chat-ad"><div class="ad-art">${icon("video")}</div><div><strong>${esc(row.text)}</strong><span>${esc(row.detail)}</span><small>开发占位 · 未接入</small></div><button data-action="hide-ad" aria-label="关闭广告占位">×</button></div>`;
+  else
+    body = `<div class="message-bubble ${row.type === "notice" ? "notice-bubble" : ""}">${esc(row.text)}${row.coins ? `<strong>${row.coins}金币</strong>` : ""}${row.detail ? `<small>${esc(row.detail)}</small>` : ""}</div>`;
+  return `<article class="room-message ${row.type === "notice" ? "room-announcement" : ""}" data-message="${esc(row.id)}">${avatar}<div class="message-body">${head}${body}</div></article>`;
 }
 function group() {
-  const banks = state.group.banks,
-    feed = state.group.feed.filter(
-      (f) => state.groupFilter === "all" || f.kind === state.groupFilter,
-    );
-  return (
-    header(
-      "RED PACKET ROOM",
-      "欢乐红包群",
-      "这里的消息来自你的真实开发任务，没有虚构群友或到账播报。",
-    ) +
-    `<div class="group-banner"><div><h2>红包与宝箱独立累计，可暂存继续叠包</h2><div class="caption">退出页面后按服务端时间恢复 · 每池独立累计</div></div><span class="pill">基础金币＋补贴</span></div><div class="group-layout"><section><div class="bank-grid">${banks.map(bankCard).join("")}</div><section class="card"><div class="row"><h2>我的群动态</h2><span class="caption">个人系统消息</span></div><div class="tabs">${[
-      ["all", "全部"],
-      ["redpacket", "红包"],
-      ["treasure", "宝箱"],
-    ]
-      .map(
-        ([key, label]) =>
-          `<button class="tab ${state.groupFilter === key ? "active" : ""}" data-filter="${key}">${label}</button>`,
-      )
-      .join(
-        "",
-      )}</div><div class="feed">${feed.length ? feed.map((f) => `<article class="feed-row"><div class="feed-icon">${icon(f.kind === "treasure" ? "chest" : f.kind === "bag" ? "bag" : "packet")}</div><div><div class="feed-message">${esc(f.title)}${f.coins ? `<b>${f.coins} 金币</b>` : ""}</div><div class="feed-time">系统 · ${shortTime(f.created_at)}</div></div></article>`).join("") : '<div class="empty">第一轮还在准备。倒计时结束后，系统会生成待领金额。</div>'}</div></section></section><aside><section class="card"><h2>叠包怎么玩？</h2><ol class="steps"><li><b>1</b><span>先看金额，打开前金币数字可见。</span></li><li><b>2</b><span>暂不打开就继续累计，到上限后停止增长。</span></li><li><b>3</b><span>打开时锁定金额和补贴；取消或超时保留叠包金额。</span></li><li><b>4</b><span>任务完成后入账并开启新一轮。</span></li></ol></section><section class="card"><h2>广告能力状态</h2><p class="caption">激励：仅显式开发模拟<br>横幅：未接入<br>插屏：未接入<br>原生信息流：未接入</p><div class="notice">等待不代表观看广告，也不会产生广告收入。不会自动弹出或伪造广告。</div></section>${state.config.mode === "development" ? '<button class="button secondary full" data-action="advance">开发工具：推进下一轮</button>' : ""}</aside></div>`
-  );
+  const room = state.group.room;
+  return `<section class="room-shell"><header class="room-top"><h1 title="${esc(room.title)}（${room.memberCount}）">${esc(room.title)}<span>（${room.memberCount}）</span></h1><div class="room-wallet"><span class="coin-emblem">金</span><strong>${state.user.balance.toLocaleString()}</strong><button class="room-withdraw" data-nav="wallet" aria-label="打开演示提现钱包">提现</button></div></header><div class="room-mode">开发联调 · 金币不可兑现 · 人数为注册账户数，非在线人数</div><div class="room-stage"><button class="lucky-float" data-nav="bag" aria-label="打开幸运福袋"><span class="lucky-tip">点击领奖</span><img src="/assets/bag.svg" alt=""><strong>福袋</strong></button><div class="room-scroll feed">${state.group.messages.map(roomMessage).join("")}<div class="room-end">本账户的系统动态</div></div></div><footer class="room-tools"><button class="link" data-action="rules">玩法说明</button>${state.user.pendingTask ? '<button class="link" data-action="resume">恢复未完成任务</button>' : ""}${state.config.mode === "development" ? '<button class="link" data-action="advance">开发：推进一轮</button>' : ""}</footer></section>`;
 }
 function bag() {
   const c = state.config;
   return (
     header(
       "A LITTLE LUCK, A CLEAR REWARD",
-      "幸运福袋，每分钟一次机会。",
+      "视频任务与幸运福袋",
       "概率公开，抽取结果由服务端锁定；当前只提供开发联调。",
     ) +
     `<div class="grid"><section class="card bag-hero"><span class="pill">今日剩余 ${state.user.remaining.bag} 次</span><img src="/assets/bag.svg" alt="原创福袋插画"><h2>这一袋，会有多少金币？</h2><div class="muted">基础${Math.min(...c.prizes.filter((p) => p.weight).map((p) => p.coins))}—${Math.max(...c.prizes.filter((p) => p.weight).map((p) => p.coins))}金币，另加补贴${c.subsidyCoins}</div><div class="countdown" id="bag-countdown">00:00</div><button class="button full" data-claim="bag" id="bag-open">开始模拟，抽取福袋</button><p class="caption">取消同样进入冷却，不支持反复挑选结果。没有付费抽取。</p></section><aside><section class="card"><div class="row"><h2>奖励概率</h2><span class="pill">基础金币，不含补贴</span></div><div class="probability">${c.prizes.map((p) => `<div class="prize ${p.coins === 500 ? "top" : ""}"><strong>${p.coins}</strong><small>金币 · 概率${p.weight}%</small></div>`).join("")}</div><p class="caption">这些是本版可配置的开发规则，不代表元享真实概率。未核实随机现金激励的适用规则。</p></section><section class="card"><h2>最近奖励记录</h2>${recentLedger(4)}</section>${c.mode === "development" ? '<button class="button secondary full" data-action="advance">开发工具：结束冷却</button>' : ""}</aside></div>`
@@ -290,6 +282,7 @@ function profile() {
 }
 function render() {
   if (!state.user) return;
+  document.body.classList.toggle("room-open", state.page === "group");
   const oldFeed = $(".feed"),
     scroll = oldFeed?.scrollTop || 0,
     nearBottom =
@@ -305,7 +298,10 @@ function render() {
       { home, group, bag, wallet, records, invite, support, profile }[
         state.page
       ] || home
-    )() + '<footer class="footer">悦享金币 · 元享式玩法独立开发版</footer>';
+    )() +
+    (state.page === "group"
+      ? ""
+      : '<footer class="footer">悦享金币 · 元享式玩法独立开发版</footer>');
   $("#app").setAttribute("aria-busy", "false");
   if ($(".feed"))
     $(".feed").scrollTop = nearBottom ? $(".feed").scrollHeight : scroll;
@@ -482,17 +478,17 @@ document.addEventListener("click", async (e) => {
       render();
       return;
     }
-    if (b.dataset.filter) {
-      state.groupFilter = b.dataset.filter;
-      render();
-      return;
-    }
     if (b.dataset.coins) {
       state.walletCoins = Number(b.dataset.coins);
       render();
       return;
     }
     const a = b.dataset.action;
+    if (a === "hide-ad") {
+      state.adHidden = true;
+      render();
+      return;
+    }
     if (a === "advance") await run(() => api("/dev/ready", "POST", {}));
     if (a === "resume")
       await run(() => claim(state.user.pendingTask?.kind || "signin"));
@@ -508,7 +504,13 @@ document.addEventListener("click", async (e) => {
     }
     if (a === "rules")
       window.alert(
-        "本版按用户描述实现同类玩法。红包、宝箱默认各120秒加390，上限8888；可暂存，任务创建后锁金额；福袋60秒冷却，概率公开；补贴单独记账。具体参数为开发规则，不代表元享真实算法。",
+        state.group.banks
+          .map(
+            (b) =>
+              `${b.title}：每${b.interval}秒增加${b.increment}金币，本轮上限${b.cap}。`,
+          )
+          .join("\n") +
+          `\n可暂存，任务创建后锁金额；福袋${state.config.bagCooldownSeconds}秒冷却，概率公开；补贴单独记账。参数为开发规则，金币不可兑现。`,
       );
     if (a === "capabilities")
       window.alert(

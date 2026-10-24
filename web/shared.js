@@ -8,6 +8,7 @@ export const esc = (value) =>
       ],
   );
 const paths = {
+  video: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-2 5 6 4-6 4V8Z",
   home: "M3 10 12 3l9 7v11h-6v-7H9v7H3V10Z",
   packet: "M4 4h16v17H4V4Zm0 2 8 7 8-7m-12 9h8",
   chest: "M3 10V7a9 5 0 0 1 18 0v3M3 10h18v11H3V10Zm7 0v7h4v-7",

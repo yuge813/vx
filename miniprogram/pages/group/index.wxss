@@ -1,0 +1,409 @@
+page {
+  height: 100%;
+  background: #f1f1ef;
+  color: #292a30;
+}
+.room-native {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-size: 28rpx;
+}
+.room-native button {
+  margin: 0;
+  border-radius: 0;
+  line-height: 1.5;
+  padding: 0;
+  font-size: inherit;
+  background: transparent;
+  color: inherit;
+}
+.room-native button::after {
+  border: 0;
+}
+.room-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+  padding: 28rpx 24rpx 16rpx;
+  background: #fafaf8;
+}
+.room-title {
+  font-size: 38rpx;
+  font-weight: 700;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.room-title text {
+  font-size: 26rpx;
+}
+.room-wallet {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  flex-shrink: 0;
+  background: #fff7e8;
+  border-radius: 28rpx;
+  padding: 8rpx;
+}
+.coin-emblem {
+  width: 38rpx;
+  height: 38rpx;
+  line-height: 38rpx;
+  text-align: center;
+  background: #ffdc5b;
+  border: 5rpx solid #efc43d;
+  border-radius: 50%;
+  color: #ae7a18;
+  font-size: 18rpx;
+}
+.room-balance {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #b95f36;
+}
+.room-native .room-withdraw {
+  background: #7650d4;
+  color: white;
+  font-size: 26rpx;
+  border-radius: 40rpx;
+  padding: 8rpx 24rpx;
+}
+.room-mode {
+  background: #fafaf8;
+  padding: 0 24rpx 16rpx;
+  font-size: 18rpx;
+  color: #8d8987;
+  border-bottom: 1rpx solid #e7e5e0;
+}
+.room-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.room-scroll {
+  height: 100%;
+}
+.room-messages {
+  padding: 36rpx 24rpx;
+}
+.room-message {
+  display: flex;
+  gap: 20rpx;
+  align-items: flex-start;
+  margin-bottom: 44rpx;
+}
+.room-avatar {
+  width: 70rpx;
+  height: 70rpx;
+  line-height: 70rpx;
+  text-align: center;
+  flex-shrink: 0;
+  border-radius: 14rpx;
+  background: linear-gradient(145deg, #e9ddce, #c9b6a0);
+  color: #6d5b47;
+  font-size: 34rpx;
+  font-weight: 600;
+}
+.avatar-redpacket {
+  background: linear-gradient(145deg, #ffb647, #f06c37);
+  color: #fff4cf;
+}
+.avatar-treasure {
+  background: linear-gradient(145deg, #ab8de6, #7551bd);
+  color: #fff4dc;
+}
+.avatar-notice {
+  background: #dbdacd;
+  color: #67665c;
+}
+.avatar-ad {
+  background: #dce7e4;
+  color: #6e8980;
+}
+.message-body {
+  flex: 1;
+  min-width: 0;
+}
+.message-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-bottom: 14rpx;
+  color: #62615f;
+  font-size: 26rpx;
+}
+.message-time {
+  font-size: 22rpx;
+  color: #9a9793;
+  flex-shrink: 0;
+}
+.message-bubble {
+  display: inline-block;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 24rpx 28rpx;
+  background: #fffdf2;
+  border-radius: 6rpx 28rpx 28rpx;
+  line-height: 1.7;
+  font-size: 30rpx;
+  word-break: break-all;
+}
+.message-coins {
+  color: #b96a34;
+  font-size: 36rpx;
+  margin-top: 14rpx;
+  font-weight: 600;
+}
+.message-detail {
+  color: #999384;
+  font-size: 22rpx;
+  margin-top: 16rpx;
+}
+.room-announcement {
+  margin-left: 94rpx;
+}
+.room-announcement .room-avatar {
+  display: none;
+}
+.notice-bubble {
+  font-size: 24rpx;
+}
+.chat-packet {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24rpx;
+  background: linear-gradient(125deg, #ffad40, #f36023 73%, #ed501f);
+}
+.room-native .packet-open {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  color: #fff7dd;
+  padding: 28rpx 42rpx 24rpx 0;
+  min-height: 248rpx;
+}
+.packet-open[disabled] {
+  opacity: 1;
+}
+.packet-open image {
+  width: 166rpx;
+  height: 190rpx;
+  flex-shrink: 0;
+}
+.packet-copy {
+  min-width: 0;
+  flex: 1;
+}
+.packet-greeting {
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 1.5;
+  padding-right: 12rpx;
+}
+.packet-action {
+  font-size: 24rpx;
+  color: #fff5df;
+  margin-top: 10rpx;
+}
+.packet-value {
+  font-size: 46rpx;
+  color: #fff;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 14rpx;
+}
+.packet-value text {
+  font-size: 24rpx;
+  color: #ffe6bd;
+  font-weight: 400;
+}
+.room-native .packet-close {
+  position: absolute;
+  top: 2rpx;
+  right: 6rpx;
+  width: 64rpx;
+  height: 64rpx;
+  color: #fff4d9;
+  font-size: 46rpx;
+}
+.packet-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 12rpx 20rpx;
+  background: #ffffff14;
+  color: #fff0da;
+  font-size: 20rpx;
+}
+.packet-track {
+  height: 6rpx;
+  background: #00000010;
+}
+.packet-track view {
+  height: 100%;
+  background: #ffdc84;
+}
+.packet-hint {
+  color: #9b958b;
+  font-size: 20rpx;
+  margin-top: 12rpx;
+}
+.is-treasure {
+  background: linear-gradient(125deg, #ba89df, #8960c7 70%, #7350b6);
+}
+.is-waiting {
+  background: #e4dfd3;
+}
+.is-waiting .packet-open,
+.is-waiting .packet-value {
+  color: #8c8070;
+}
+.is-waiting .packet-action,
+.is-waiting .packet-value text,
+.is-waiting .packet-bottom {
+  color: #9b8e7a;
+}
+.chat-saved {
+  padding: 32rpx;
+  background: #fffdf2;
+  border-radius: 8rpx 26rpx 26rpx;
+}
+.saved-caption {
+  font-size: 24rpx;
+  color: #a19684;
+  margin-top: 8rpx;
+}
+.room-native .restore-button {
+  text-align: left;
+  color: #7650d4;
+  margin-top: 16rpx;
+  font-size: 24rpx;
+}
+.chat-ad {
+  display: flex;
+  position: relative;
+  gap: 20rpx;
+  border: 1rpx solid #e1e4df;
+  background: #fdfdfb;
+  padding: 24rpx 56rpx 24rpx 20rpx;
+  border-radius: 16rpx;
+}
+.ad-art {
+  width: 128rpx;
+  min-height: 150rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #dee7e3, #eef1e8);
+  color: #7e998e;
+  font-size: 24rpx;
+}
+.ad-copy {
+  min-width: 0;
+  font-size: 26rpx;
+}
+.ad-detail {
+  font-size: 22rpx;
+  color: #9b9d92;
+  margin: 8rpx 0;
+}
+.ad-label {
+  font-size: 20rpx;
+  color: #8e998c;
+}
+.room-native .ad-close {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 60rpx;
+  height: 60rpx;
+  color: #9c9d94;
+  font-size: 44rpx;
+}
+.room-native .lucky-float {
+  position: absolute;
+  top: 10rpx;
+  left: 0;
+  z-index: 2;
+  width: 124rpx;
+  height: 240rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: visible;
+}
+.lucky-float image {
+  width: 240rpx;
+  height: 176rpx;
+  margin-top: 36rpx;
+  pointer-events: none;
+}
+.lucky-tip {
+  position: absolute;
+  top: 0;
+  font-size: 20rpx;
+  color: #ffe5a2;
+  background: #322d2e;
+  padding: 6rpx 14rpx;
+  border-radius: 18rpx 18rpx 18rpx 0;
+  white-space: nowrap;
+}
+.lucky-label {
+  margin-top: -30rpx;
+  background: #ed6336;
+  color: #fff4d7;
+  border-radius: 32rpx;
+  padding: 4rpx 26rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+.room-end {
+  text-align: center;
+  color: #aaa69c;
+  font-size: 20rpx;
+  margin-top: 48rpx;
+}
+.room-tools {
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 20rpx 36rpx;
+  border-top: 1rpx solid #e5e2db;
+  background: #f8f8f4;
+}
+.room-native .room-tools button {
+  color: #8e8a84;
+  font-size: 22rpx;
+}
+.room-error,
+.room-loading {
+  padding: 32rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #9b6b61;
+}
+@media (max-width: 350px) {
+  .room-title {
+    font-size: 32rpx;
+  }
+  .room-title text {
+    font-size: 22rpx;
+  }
+  .coin-emblem {
+    display: none;
+  }
+  .packet-open image {
+    width: 130rpx;
+    height: 180rpx;
+  }
+  .packet-greeting {
+    font-size: 28rpx;
+  }
+}

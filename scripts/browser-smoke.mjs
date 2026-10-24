@@ -52,13 +52,52 @@ try {
   );
   assert.equal(store.profile(u).balance, 620);
   await b.click("#navigation [data-nav=group]");
+  assert.equal(
+    await b.evaluate("document.querySelectorAll('#navigation button').length"),
+    5,
+  );
+  assert.equal(
+    await b.evaluate(
+      "Boolean(document.querySelector('.room-top') && document.querySelector('.room-scroll'))",
+    ),
+    true,
+  );
   await b.click("[data-action=advance]");
   await idle();
   assert.equal(
     store.group(u).banks.find((x) => x.kind === "redpacket").coins,
     390,
   );
+  await b.evaluate("document.querySelector('.room-scroll').scrollTop=0");
+  await shot("mobile-group-chat");
   await shot("mobile-group-first");
+  const toolbarBefore = await b.evaluate(
+    "document.querySelector('.room-top').getBoundingClientRect().top",
+  );
+  await b.evaluate("document.querySelector('.room-scroll').scrollTop=10000");
+  assert.equal(
+    await b.evaluate(
+      "document.querySelector('.room-top').getBoundingClientRect().top",
+    ),
+    toolbarBefore,
+  );
+  await b.click("[data-action=hide-ad]");
+  assert.equal(
+    await b.evaluate("Boolean(document.querySelector('.chat-ad'))"),
+    false,
+  );
+  await b.click(".lucky-float");
+  assert.equal(
+    await b.evaluate("Boolean(document.querySelector('#bag-open'))"),
+    true,
+  );
+  await b.click("#navigation [data-nav=group]");
+  await b.click(".room-withdraw");
+  assert.equal(
+    await b.evaluate("Boolean(document.querySelector('#withdraw-form'))"),
+    true,
+  );
+  await b.click("#navigation [data-nav=group]");
   await b.click("[data-skip=redpacket]");
   await idle();
   await b.until("Boolean(document.querySelector('[data-restore=redpacket]'))");
@@ -120,7 +159,7 @@ try {
   assert.equal(store.profile(u).frozen, 1000);
   await shot("mobile-wallet");
   await b.click("#navigation [data-nav=profile]");
-  await b.click("[data-nav=invite]");
+  await b.click("#navigation [data-nav=invite]");
   const other = store.login("browser_real_referral_fixture").user.id,
     code = store.referral(other).code;
   await b.evaluate(
@@ -138,7 +177,7 @@ try {
   assert.equal(store.supportList(u).length, 1);
   for (const width of [320, 390, 600]) {
     await b.viewport(width, 844, true);
-    for (const page of ["home", "group", "bag", "profile"]) {
+    for (const page of ["home", "group", "bag", "invite", "profile"]) {
       await b.click("#navigation [data-nav=" + page + "]");
       assert.equal(
         await b.evaluate("document.documentElement.scrollWidth<=" + width),
@@ -147,7 +186,12 @@ try {
       );
     }
   }
+  await b.viewport(390, 844, true);
+  await b.click("#navigation [data-nav=group]");
+  await b.evaluate("document.querySelector('.room-scroll').scrollTop=10000");
+  await shot("mobile-group-claimed");
   await b.viewport(1440, 1100);
+  await shot("desktop-group-chat");
   await b.send("Page.navigate", { url: base + "/admin" });
   await b.until("Boolean(document.querySelector('#admin-token'))");
   await b.evaluate(

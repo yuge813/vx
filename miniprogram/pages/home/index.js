@@ -72,7 +72,7 @@ Page({
     wx.navigateTo({ url: "/pages/wallet/index" });
   },
   invite() {
-    wx.navigateTo({ url: "/pages/invite/index" });
+    wx.switchTab({ url: "/pages/invite/index" });
   },
   records() {
     wx.navigateTo({ url: "/pages/records/index" });

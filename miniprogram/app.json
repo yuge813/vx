@@ -16,9 +16,9 @@
     "backgroundColor": "#fff7f2"
   },
   "tabBar": {
-    "color": "#a58e83",
-    "selectedColor": "#d84552",
-    "backgroundColor": "#fffaf6",
+    "color": "#918a94",
+    "selectedColor": "#7650d4",
+    "backgroundColor": "#fafaf8",
     "borderStyle": "white",
     "list": [
       {
@@ -29,15 +29,21 @@
       },
       {
         "pagePath": "pages/group/index",
-        "text": "红包群",
+        "text": "红包",
         "iconPath": "assets/nav-packet.png",
         "selectedIconPath": "assets/nav-packet-active.png"
       },
       {
         "pagePath": "pages/bag/index",
-        "text": "幸运福袋",
-        "iconPath": "assets/nav-bag.png",
-        "selectedIconPath": "assets/nav-bag-active.png"
+        "text": "视频",
+        "iconPath": "assets/nav-video.png",
+        "selectedIconPath": "assets/nav-video-active.png"
+      },
+      {
+        "pagePath": "pages/invite/index",
+        "text": "邀请",
+        "iconPath": "assets/nav-invite.png",
+        "selectedIconPath": "assets/nav-invite-active.png"
       },
       {
         "pagePath": "pages/profile/index",

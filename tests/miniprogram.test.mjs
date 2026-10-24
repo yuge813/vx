@@ -168,3 +168,68 @@ test("原生新版红包取消保留叠包，提交回包丢失后恢复不重�
     0,
   );
 });
+
+test("原生聊天群页面加载真实卡片、暂存与恢复、金额更新和领取后新轮次", async (t) => {
+  const { client, advance } = await clientFixture(t, true);
+  let page;
+  const routes = [];
+  const wx = {
+    nextTick: (fn) => fn(),
+    showToast() {},
+    showModal() {},
+    navigateTo: (r) => routes.push(r.url),
+    switchTab: (r) => routes.push(r.url),
+  };
+  vm.runInNewContext(
+    readFileSync(
+      new URL("../miniprogram/pages/group/index.js", import.meta.url),
+      "utf8",
+    ),
+    {
+      require: () => client,
+      getApp: () => ({ ready: () => Promise.resolve() }),
+      wx,
+      Date,
+      Page: (definition) => (page = definition),
+    },
+  );
+  page.setData = function (patch) {
+    Object.assign(this.data, patch);
+  };
+  await page.load();
+  assert.equal(page.data.rows.filter((r) => r.type === "packet").length, 2);
+  assert.ok(
+    page.data.rows
+      .filter((r) => r.type === "packet")
+      .every((r) => r.bank.disabled),
+  );
+  advance(120000);
+  await page.load();
+  const row = () => page.data.rows.find((r) => r.bank?.kind === "redpacket");
+  assert.equal(row().bank.coins, 390);
+  assert.equal(row().bank.disabled, false);
+  await page.skip({ currentTarget: { dataset: { kind: "redpacket" } } });
+  assert.equal(row().bank.saved, true);
+  page.restore({ currentTarget: { dataset: { kind: "redpacket" } } });
+  assert.equal(row().bank.saved, false);
+  await page.skip({ currentTarget: { dataset: { kind: "redpacket" } } });
+  advance(120000);
+  await page.load();
+  assert.equal(row().bank.saved, false);
+  assert.equal(row().bank.coins, 780);
+  page.hideAd();
+  assert.equal(
+    page.data.rows.some((r) => r.type === "ad"),
+    false,
+  );
+  page.data.busy = true;
+  page.tick();
+  assert.equal(row().bank.disabled, true);
+  page.data.busy = false;
+  await page.claim({ currentTarget: { dataset: { kind: "redpacket" } } });
+  assert.equal(row().bank.coins, 0);
+  assert.equal(page.data.group.user.balance, 800);
+  page.bag();
+  page.wallet();
+  assert.deepEqual(routes, ["/pages/bag/index", "/pages/wallet/index"]);
+});

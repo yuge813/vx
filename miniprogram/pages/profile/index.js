@@ -29,7 +29,7 @@ Page({
     wx.navigateTo({ url: "/pages/records/index" });
   },
   invite() {
-    wx.navigateTo({ url: "/pages/invite/index" });
+    wx.switchTab({ url: "/pages/invite/index" });
   },
   support() {
     wx.navigateTo({ url: "/pages/support/index" });

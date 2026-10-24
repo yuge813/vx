@@ -2,6 +2,7 @@ import { Store, AppError, dayKey } from "./store.mjs";
 import { DatabaseSync } from "node:sqlite";
 import { existsSync } from "node:fs";
 import { randomUUID, randomBytes, randomInt, createHash } from "node:crypto";
+import { buildRoomMessages } from "./room-view.mjs";
 const need = (v, m, status = 400, code = "INVALID_REQUEST") => {
   if (!v) throw new AppError(m, status, code);
 };
@@ -91,7 +92,10 @@ export class YuanxiangStore extends Store {
       packetRules: `新一轮红包与宝箱每${this.settings().packetIntervalSeconds}秒累计${this.settings().packetIncrement}金币，上限${this.settings().packetCap}；均为开发参数`,
       prizes: this.prizes(),
       adSlots: {
-        rewarded: this.development && this.adProvider === "demo" ? "demo_only" : "disabled",
+        rewarded:
+          this.development && this.adProvider === "demo"
+            ? "demo_only"
+            : "disabled",
         banner: "disabled",
         interstitial: "disabled",
         native: "disabled",
@@ -314,7 +318,7 @@ export class YuanxiangStore extends Store {
           atCap: bank.coins >= rule.cap,
         });
       }
-      return {
+      const result = {
         banks,
         feed: this.db
           .prepare(
@@ -325,6 +329,16 @@ export class YuanxiangStore extends Store {
         serverTime: this.now(),
         remaining: this.quotas(id),
         user: this.profile(id),
+        room: {
+          id: "01",
+          title: "红包群01",
+          memberCount: this.db.prepare("SELECT COUNT(*) AS n FROM users").get()
+            .n,
+        },
+      };
+      return {
+        ...result,
+        messages: buildRoomMessages(result, { adPreview: this.development }),
       };
     });
   }
