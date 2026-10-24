@@ -13,6 +13,9 @@
   <view class="room-mode"
     >开发联调 · 金币不可兑现 · 人数为注册账户数，非在线人数</view
   >
+  <view wx:if="{{group}}" class="room-disclosure"
+    >{{group.roomDisclosure}}</view
+  >
   <view wx:if="{{error}}" class="room-error" bindtap="load"
     >{{error}} · 点击重试</view
   >
@@ -32,13 +35,23 @@
           wx:key="id"
           class="room-message {{item.type === 'notice' ? 'room-announcement' : ''}}"
         >
-          <view
+          <image
+            wx:if="{{item.avatar}}"
+            class="room-avatar portrait-avatar"
+            src="/assets/{{item.avatar}}.png"
+            mode="aspectFill"
+          /><view
+            wx:else
             class="room-avatar avatar-{{item.type === 'packet' ? item.bank.kind : item.type}}"
             >{{item.mark}}</view
           >
           <view class="message-body"
             ><view class="message-head"
-              ><text>{{item.actor}}</text
+              ><view class="message-sender"
+                ><text>{{item.actor}}</text
+                ><text wx:if="{{item.badge}}" class="assistant-badge"
+                  >{{item.badge}}</text
+                ></view
               ><text class="message-time">{{item.time}}</text></view
             >
             <block wx:if="{{item.type === 'packet'}}">
@@ -93,6 +106,17 @@
               </view>
               <view class="packet-hint">{{item.bank.hint}}</view>
             </block>
+            <view
+              wx:elif="{{item.type === 'packet_history'}}"
+              class="history-packet {{item.packetKind === 'treasure' ? 'history-treasure' : ''}}"
+              ><image
+                src="/assets/{{item.packetKind === 'treasure' ? 'chest' : 'packet'}}.png"
+                mode="aspectFill"
+              /><view
+                ><view class="history-title">{{item.text}}</view
+                ><view class="history-detail">{{item.detail}}</view></view
+              ></view
+            >
             <view wx:elif="{{item.type === 'ad'}}" class="chat-ad"
               ><view class="ad-art">广告位</view
               ><view class="ad-copy"
@@ -113,7 +137,9 @@
             >
           </view>
         </view>
-        <view id="room-end" class="room-end">本账户的真实系统动态</view>
+        <view id="room-end" class="room-end"
+          >活动消息由运营方发布 · 金币以账户流水为准</view
+        >
       </view>
     </scroll-view>
     <button class="lucky-float" bindtap="bag">
@@ -133,6 +159,8 @@
   >
   <view class="room-tools"
     ><button bindtap="rules">玩法说明</button
+    ><button wx:if="{{adPreview.enabled}}" bindtap="adSchedule">
+      广告预览 {{adPreview.sessionCount}}/{{config.adPacing.sessionLimit}}</button
     ><button
       wx:if="{{group.user.pendingTask}}"
       bindtap="claim"

@@ -17,8 +17,8 @@ try {
     n.endsWith(".svg"),
   )) {
     await browser.viewport(
-      name.startsWith("nav-") ? 81 : 600,
-      name.startsWith("nav-") ? 81 : 420,
+      name.startsWith("nav-") ? 81 : name.startsWith("avatar-") ? 96 : 600,
+      name.startsWith("nav-") ? 81 : name.startsWith("avatar-") ? 96 : 420,
     );
     await browser.send("Page.navigate", { url: base + "/assets/" + name });
     await browser.until(
@@ -28,7 +28,7 @@ try {
       join("miniprogram/assets", name.replace(".svg", ".png")),
     );
   }
-  console.log("3幅原创玩法插画及10幅原生导航图标已渲染为PNG。");
+  console.log("3幅原创玩法插画、10幅导航图标及6幅活动助手头像已渲染为PNG。");
 } finally {
   await browser?.close();
   await new Promise((r) => server.close(r));

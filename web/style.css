@@ -1904,3 +1904,165 @@ nav button.active {
     font-size: 10px;
   }
 }
+.room-disclosure {
+  padding: 6px 12px;
+  background: #eeebf6;
+  color: #8b7e9d;
+  font-size: 10px;
+  border-bottom: 1px solid #e5e0ec;
+}
+.portrait-avatar {
+  object-fit: cover;
+  border: 1px solid #00000008;
+}
+.message-sender {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.message-head .assistant-badge {
+  font-size: 9px;
+  color: #9987b5;
+  border: 1px solid #d8cfe6;
+  border-radius: 3px;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+.history-packet {
+  background: linear-gradient(125deg, #f5ba76, #e68e57);
+  border-radius: 12px;
+  padding: 15px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff9e7;
+}
+.history-packet strong {
+  font-weight: 500;
+  font-size: 15px;
+  display: block;
+  line-height: 1.6;
+}
+.history-packet small {
+  font-size: 10px;
+  display: block;
+  color: #ffefd7;
+  margin-top: 8px;
+}
+.history-envelope {
+  flex-shrink: 0;
+  color: #ffe4ad;
+}
+.history-envelope svg {
+  width: 32px;
+  height: 40px;
+}
+.history-treasure {
+  background: linear-gradient(125deg, #b99bcf, #957db7);
+}
+.room-admin-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.2fr);
+  gap: 22px;
+}
+.room-admin .field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.room-admin form {
+  padding: 14px 0 20px;
+  border-bottom: 1px solid var(--line);
+}
+.room-admin .field-label {
+  display: block;
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+.room-admin .field {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+}
+.room-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 12px 0;
+}
+.room-admin-list {
+  max-height: 410px;
+  overflow: auto;
+  margin-top: 12px;
+}
+.room-actor-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.room-actor-row img {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 9px;
+}
+.room-actor-row strong {
+  display: block;
+  font-size: 13px;
+}
+.room-actor-row small,
+.room-message-row small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+}
+.room-row-actions {
+  display: flex;
+  gap: 9px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.room-row-actions .link {
+  font-size: 11px;
+}
+.danger-text {
+  color: #c3545f;
+}
+.room-message-row {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.room-message-row p {
+  font-size: 13px;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.room-kind {
+  font-size: 11px;
+  border-radius: 4px;
+  padding: 1px 7px;
+  background: #f1e9df;
+  color: #9c8269;
+}
+.kind-redpacket {
+  background: #fce6d5;
+  color: #cf7645;
+}
+.kind-treasure {
+  background: #eee5f8;
+  color: #8f6db2;
+}
+@media (max-width: 850px) {
+  .room-admin-grid {
+    grid-template-columns: 1fr;
+  }
+  .room-admin .row.section {
+    flex-wrap: wrap;
+  }
+}

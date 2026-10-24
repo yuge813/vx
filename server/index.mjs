@@ -320,6 +320,38 @@ export async function yuanxiangRoutes({
 }) {
   let match;
   if (admin) {
+    if (req.method === "GET" && path === "/api/admin/room-content") {
+      send(200, store.roomContent.admin());
+      return true;
+    }
+    if (
+      (match = path.match(
+        /^\/api\/admin\/room\/(actors|messages)(?:\/([a-f0-9-]+))?$/,
+      ))
+    ) {
+      const [, type, id] = match;
+      if ((req.method === "POST" && !id) || (req.method === "PUT" && id)) {
+        const data = await readBody();
+        send(
+          200,
+          type === "actors"
+            ? store.roomContent.saveActor(id, data)
+            : store.roomContent.saveMessage(id, data),
+        );
+        return true;
+      }
+      if (req.method === "DELETE" && id) {
+        send(
+          200,
+          store.roomContent.remove(
+            type === "actors" ? "actor" : "message",
+            id,
+            await readBody(),
+          ),
+        );
+        return true;
+      }
+    }
     if (
       req.method === "POST" &&
       (match = path.match(/^\/api\/admin\/support\/([a-f0-9-]+)\/reply$/))
@@ -336,7 +368,15 @@ export async function yuanxiangRoutes({
     return true;
   }
   if (req.method === "GET" && path === "/api/group") {
-    send(200, store.group(userId));
+    const active =
+      new URL(req.url, "http://localhost").searchParams.get("active") === "1";
+    send(200, store.group(userId, { roomActive: active }));
+    return true;
+  }
+  if (req.method === "POST" && path === "/api/group/presence") {
+    const data = await readBody();
+    if (data.active !== false) fail("仅支持暂停群消息计时", 400);
+    send(200, store.roomContent.pause(userId));
     return true;
   }
   if (req.method === "POST" && path === "/api/group/skip") {

@@ -42,7 +42,7 @@ setup生成独立 `.env.yuanxiang`，数据库独立保存为 `data/yuanxiang.sq
 | 模块       | 当前实现                                                       |
 | ---------- | -------------------------------------------------------------- |
 | 签到       | 先完成任务、北京时间每日一次、真实7日记录，无免费接口绕过      |
-| 红包群     | 服务端120秒、预览金额、暂存、继续叠包、8888上限、个人系统消息  |
+| 红包群     | 服务端120秒、预览金额、暂存、继续叠包、8888上限、多个活动助手与后台轮播消息  |
 | 宝箱       | 独立奖励池和进度、任务锁金额、取消保留、完成重置               |
 | 福袋       | 四档概率、服务端随机锁定、开奖前隐藏结果、60秒冷却             |
 | 金币与补贴 | 基础/补贴分账，预算预留，跨日叠包分日期结算，任务幂等          |
@@ -73,12 +73,14 @@ npm run check
 npm run test:browser -- --screenshots
 ```
 
-测试使用临时数据库，覆盖新玩法与基础账务回归；wx适配层测试不替代微信工具或真机。62项测试通过；浏览器覆盖五个导航、悬浮福袋、固定群工具栏、广告占位关闭、签到、叠包至8888、取消保留、福袋、提现、邀请、反馈及320/390/600px布局。
+测试使用临时数据库，覆盖新玩法与基础账务回归；wx适配层测试不替代微信工具或真机。73项测试通过；浏览器覆盖五个导航、悬浮福袋、固定群工具栏、广告占位关闭、签到、叠包至8888、取消保留、福袋、提现、邀请、反馈及320/390/600px布局。
 
 下列截图均来自**浏览器实际运行**，不是微信开发者工具、真机或审核截图：
 
 - [手机首页](docs/screenshots/yuanxiang/mobile-home.png)
 - [聊天式红包群：本次按用户照片调整](docs/screenshots/yuanxiang/mobile-group-chat.png)
+- [多个活动助手与不同头像](docs/screenshots/yuanxiang/mobile-group-actors.png)
+- [后台管理的消息在群内发布](docs/screenshots/yuanxiang/mobile-group-managed.png)
 - [红包群第一包](docs/screenshots/yuanxiang/mobile-group-first.png)
 - [叠包至8888](docs/screenshots/yuanxiang/mobile-group-stacked.png)
 - [领取后恢复下一轮](docs/screenshots/yuanxiang/mobile-group-claimed.png)
@@ -86,6 +88,7 @@ npm run test:browser -- --screenshots
 - [幸运福袋](docs/screenshots/yuanxiang/mobile-bag.png)
 - [金币钱包](docs/screenshots/yuanxiang/mobile-wallet.png)
 - [邀请记录](docs/screenshots/yuanxiang/mobile-invite.png)
+- [角色与消息后台](docs/screenshots/yuanxiang/desktop-room-admin.png)
 - [运营后台](docs/screenshots/yuanxiang/desktop-admin.png)
 
 [当前验收记录](docs/元享式验收.md)。尚未执行微信开发者工具编译、真机、真实广告、真实付款或用户服务器部署。
@@ -96,6 +99,7 @@ npm run test:browser -- --screenshots
 server/store.mjs          基础账户、流水、冻结、审核及事务
 server/yuanxiang.mjs      新版叠包、福袋、签到、邀请、申诉与预算
 server/room-view.mjs      本账户聊天流、当前卡片与历史消息
+server/room-content.mjs   活动助手、头像、后台模板、发布进度与历史
 shared/ad-pacing.cjs      两端开发广告位预览调度源，不加载真实广告
 server/index.mjs          HTTP、鉴权、微信登录交换、扩展路由
 web/                     金币浏览器端与运营后台
@@ -119,4 +123,10 @@ npm start
 
 先停止自己之前启动的服务，再启动新版。已有源码改动请先保存；不要覆盖.env.yuanxiang或data目录。ZIP用户在GitHub选择本分支，点Code → Download ZIP，解压到独立目录后按上面“下载与启动”操作。原生导入miniprogram后重新编译；浏览器强制刷新。
 
-五栏依次为：首页、红包、视频、邀请、我的。“视频”目前承载显式模拟的视频激励任务与福袋，不是短视频内容平台。红包群为本账户系统消息，不包含多人实时聊天、虚构群友或提现宣传。群人数来自已注册账户数，明确区别于在线人数。群内信息流和底部横幅按前台时间错开预览：开发默认首次15/45秒，关闭后冷却120秒，每会话6次、本机每日20次；后台可配置。插屏关闭。尚未接入广告组件，不计曝光或收入。详见[等待期广告节奏与官方核实](docs/等待期广告节奏与官方核实.md)。
+五栏依次为：首页、红包、视频、邀请、我的。“视频”目前承载显式模拟的视频激励任务与福袋，不是短视频内容平台。红包群包含多个活动助手轮流发布的运营消息、金币红包/宝箱和本账户系统动态；助手带明确标识，不包含多人实时聊天或伪造群友提现宣传。群人数来自已注册账户数，明确区别于在线人数。群内信息流和底部横幅按前台时间错开预览：开发默认首次15/45秒，关闭后冷却120秒，每会话6次、本机每日20次；后台可配置。插屏关闭。尚未接入广告组件，不计曝光或收入。详见[等待期广告节奏与官方核实](docs/等待期广告节奏与官方核实.md)。
+
+## 在后台管理头像和群消息
+
+进入`/admin`登录，在“群角色与消息管理”中先添加助手昵称并从6款原创头像中选择，再添加文字、金币红包或宝箱消息，设置间隔、排序和启用状态。列表支持编辑、停用、删除；保存到数据库并进入审计。前台通过5秒轮询获取实际发布记录。
+
+当前每条运营消息关联既有奖励池，消息数量不会增加虚假的可领取金币；旧卡片合并为历史，避免重复领取。编辑影响未来发布，停用或删除撤下关联消息，已叠金币保留。详见[群角色与消息管理](docs/群角色与消息管理.md)。

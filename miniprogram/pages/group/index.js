@@ -23,12 +23,18 @@ Page({
   },
   onHide() {
     this._visible = false;
+    api
+      .request("/api/group/presence", "POST", { active: false })
+      .catch(() => {});
     this.tick();
     clearInterval(this._timer);
     clearInterval(this._poll);
   },
   onUnload() {
     this._visible = false;
+    api
+      .request("/api/group/presence", "POST", { active: false })
+      .catch(() => {});
     this.tick();
     clearInterval(this._timer);
     clearInterval(this._poll);
@@ -37,12 +43,24 @@ Page({
     try {
       await getApp().ready();
       const [group, config] = await Promise.all([
-        api.request("/api/group"),
+        api.request(
+          "/api/group" +
+            (this._visible !== false && !this.data.busy ? "?active=1" : ""),
+        ),
         api.request("/api/config"),
       ]);
       this._offset = group.serverTime - Date.now();
       const signature = group.messages
-        .map((r) => r.id + ":" + (r.bank?.coins || 0))
+        .map(
+          (r) =>
+            r.id +
+            ":" +
+            (r.bank?.coins || 0) +
+            ":" +
+            (r.actor || "") +
+            ":" +
+            (r.avatar || ""),
+        )
         .join(",");
       const changed = signature !== this._signature;
       this._signature = signature;
@@ -126,9 +144,10 @@ Page({
           : Math.min(100, Math.max(0, 100 - (left / b.interval) * 100)),
         art: b.kind === "redpacket" ? "packet" : "chest",
         greeting: b.coins
-          ? b.kind === "redpacket"
-            ? "恭喜发财，大吉大利"
-            : "宝箱已准备，惊喜等你开"
+          ? r.text ||
+            (b.kind === "redpacket"
+              ? "恭喜发财，大吉大利"
+              : "宝箱已准备，惊喜等你开")
           : b.kind === "redpacket"
             ? "下一份红包正在准备"
             : "下一份宝箱正在准备",

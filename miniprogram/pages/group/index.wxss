@@ -447,3 +447,54 @@ page {
   flex-wrap: wrap;
   flex-shrink: 0;
 }
+.room-disclosure {
+  padding: 12rpx 24rpx;
+  background: #eeebf6;
+  color: #8b7e9d;
+  font-size: 20rpx;
+  border-bottom: 1rpx solid #e5e0ec;
+}
+.portrait-avatar {
+  border: 1rpx solid #00000008;
+}
+.message-sender {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.assistant-badge {
+  font-size: 18rpx;
+  color: #9987b5;
+  border: 1rpx solid #d8cfe6;
+  border-radius: 6rpx;
+  padding: 0 8rpx;
+  white-space: nowrap;
+}
+.history-packet {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  background: linear-gradient(125deg, #f5ba76, #e68e57);
+  border-radius: 24rpx;
+  padding: 24rpx 20rpx;
+  color: #fff9e7;
+}
+.history-packet image {
+  width: 110rpx;
+  height: 120rpx;
+  flex-shrink: 0;
+}
+.history-title {
+  font-size: 30rpx;
+  line-height: 1.6;
+}
+.history-detail {
+  font-size: 20rpx;
+  color: #ffefd7;
+  margin-top: 16rpx;
+}
+.history-treasure {
+  background: linear-gradient(125deg, #b99bcf, #957db7);
+}

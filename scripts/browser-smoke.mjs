@@ -73,6 +73,12 @@ try {
     "Boolean(document.querySelector('[data-ad-preview=native]'))",
     20000,
   );
+  assert.equal(
+    await b.evaluate(
+      "document.querySelectorAll('.portrait-avatar').length>=2 && document.querySelectorAll('.assistant-badge').length>=2",
+    ),
+    true,
+  );
   await shot("mobile-group-chat");
   await shot("mobile-group-first");
   const toolbarBefore = await b.evaluate(
@@ -90,6 +96,7 @@ try {
     40000,
   );
   await shot("mobile-group-ad-banner");
+  await shot("mobile-group-actors");
   assert.equal(
     await b.evaluate("document.querySelectorAll('[data-ad-preview]').length"),
     1,
@@ -239,6 +246,60 @@ try {
     "document.querySelector('#dashboard').textContent.includes('已回复')",
   );
   assert.equal(store.supportList(u)[0].state, "resolved");
+  await b.evaluate(
+    "document.querySelector('#room-actor-form [name=nickname]').value='清禾浏览器助手';document.querySelector('#room-actor-form [name=avatar]').value='avatar-leaf';document.querySelector('#room-actor-form [name=sortOrder]').value='5';document.querySelector('#room-actor-form').requestSubmit()",
+  );
+  await b.until(
+    "Boolean([...document.querySelectorAll('.room-actor-row')].find(r=>r.textContent.includes('清禾浏览器助手')))",
+  );
+  let roomData = store.roomContent.admin();
+  const actor = roomData.actors.find((a) => a.nickname === "清禾浏览器助手");
+  assert.equal(actor.avatar, "avatar-leaf");
+  await b.click(`[data-room-edit=actor][data-id="${actor.id}"]`);
+  await b.evaluate(
+    "document.querySelector('#room-actor-form [name=nickname]').value='清禾';document.querySelector('#room-actor-form').requestSubmit()",
+  );
+  await b.until(
+    "Boolean([...document.querySelectorAll('.room-actor-row')].find(r=>r.textContent.includes('清禾')&&!r.textContent.includes('浏览器助手')))",
+  );
+  assert.equal(
+    store.roomContent.admin().actors.find((a) => a.id === actor.id).nickname,
+    "清禾",
+  );
+  // 将现有消息移后，使新加的消息可在下一轮首先发布。
+  const first = roomData.messages[0];
+  await b.click(`[data-room-edit=message][data-id="${first.id}"]`);
+  await b.evaluate(
+    "document.querySelector('#room-message-form [name=sortOrder]').value='1000';document.querySelector('#room-message-form').requestSubmit()",
+  );
+  await b.until(
+    "document.querySelector('#room-message-form [name=recordId]').value===''",
+  );
+  await b.evaluate(
+    `{const f=document.querySelector('#room-message-form');f.elements.actorId.value=${JSON.stringify(actor.id)};f.elements.kind.value='treasure';f.elements.content.value='后台管理的小惊喜，金币以实际待领为准';f.elements.delaySeconds.value='5';f.elements.sortOrder.value='0';f.requestSubmit();}`,
+  );
+  await b.until(
+    "Boolean([...document.querySelectorAll('.room-message-row')].find(r=>r.textContent.includes('后台管理的小惊喜')))",
+  );
+  const managed = store.roomContent
+    .admin()
+    .messages.find((m) => m.content.includes("后台管理的小惊喜"));
+  await b.click(`[data-room-toggle=message][data-id="${managed.id}"]`);
+  await b.until(
+    `document.querySelector('[data-room-toggle=message][data-id="${managed.id}"]').textContent==='启用'`,
+  );
+  assert.equal(
+    store.roomContent.admin().messages.find((m) => m.id === managed.id).enabled,
+    false,
+  );
+  await b.click(`[data-room-toggle=message][data-id="${managed.id}"]`);
+  await b.until(
+    `document.querySelector('[data-room-toggle=message][data-id="${managed.id}"]').textContent==='停用'`,
+  );
+  await b.evaluate(
+    "document.querySelector('#room-content').scrollIntoView({block:'start'})",
+  );
+  await shot("desktop-room-admin");
   await shot("desktop-admin", true);
   await b.click("#logout");
   assert.equal(
@@ -247,9 +308,27 @@ try {
     ),
     true,
   );
+  await b.send("Page.navigate", { url: base + "/" });
+  await b.until(
+    "Boolean(document.querySelector('#navigation [data-nav=group]'))",
+  );
+  await b.viewport(390, 844, true);
+  await b.click("#navigation [data-nav=group]");
+  await b.until(
+    "document.querySelector('.room-scroll')?.textContent.includes('后台管理的小惊喜')",
+    17000,
+  );
+  assert.equal(
+    await b.evaluate(
+      "Boolean([...document.querySelectorAll('.room-message')].find(r=>r.textContent.includes('后台管理的小惊喜')&&r.textContent.includes('清禾')&&r.querySelector('.portrait-avatar')&&r.querySelector('.assistant-badge')) )",
+    ),
+    true,
+  );
+  await b.evaluate("document.querySelector('.room-scroll').scrollTop=10000");
+  await shot("mobile-group-managed");
   assert.deepEqual(b.exceptions, []);
   console.log(
-    "元享式新版浏览器实测通过：15秒信息流/45秒横幅错峰预览、关闭后保留红包操作、签到、390→780→8888叠包、暂存与取消保留、红包入账、概率福袋与冷却、提现冻结审核模拟完成、真实邀请绑定、反馈回复、补贴配置及320/390/600px布局。",
+    "元享式新版浏览器实测通过：活动助手头像、后台角色新增编辑、消息新增排序停启及前台真实发布、15秒信息流/45秒横幅错峰预览、关闭后保留红包操作、签到、390→780→8888叠包、暂存与取消保留、红包入账、概率福袋与冷却、提现冻结审核模拟完成、真实邀请绑定、反馈回复、补贴配置及320/390/600px布局。",
   );
 } finally {
   await b?.close();

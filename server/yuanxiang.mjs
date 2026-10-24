@@ -3,6 +3,7 @@ import { DatabaseSync } from "node:sqlite";
 import { existsSync } from "node:fs";
 import { randomUUID, randomBytes, randomInt, createHash } from "node:crypto";
 import { buildRoomMessages } from "./room-view.mjs";
+import { RoomContent } from "./room-content.mjs";
 const need = (v, m, status = 400, code = "INVALID_REQUEST") => {
   if (!v) throw new AppError(m, status, code);
 };
@@ -90,6 +91,7 @@ export class YuanxiangStore extends Store {
           .run(JSON.stringify({ ...s, ...extra }));
         this.db.prepare("INSERT INTO yuanxiang_meta VALUES(1,1)").run();
       });
+    this.roomContent = new RoomContent(this);
   }
   settings() {
     return { ...extra, ...super.settings() };
@@ -292,7 +294,7 @@ export class YuanxiangStore extends Store {
       )
       .run(id, id);
   }
-  group(id) {
+  group(id, { roomActive = false } = {}) {
     this.pruneExpired();
     return this.transaction(() => {
       this.ensureBanks(id);
@@ -375,7 +377,15 @@ export class YuanxiangStore extends Store {
       };
       return {
         ...result,
-        messages: buildRoomMessages(result),
+        messages: buildRoomMessages({
+          ...result,
+          roomContent: this.roomContent.read(
+            id,
+            banks,
+            roomActive && !result.user.pendingTask,
+          ),
+        }),
+        roomDisclosure: "活动助手由运营方管理，非真实群友聊天。",
       };
     });
   }
@@ -404,6 +414,7 @@ export class YuanxiangStore extends Store {
     );
     need(Object.keys(names).includes(kind), "任务类型错误");
     this.pruneExpired();
+    this.roomContent.pause(id);
     if (["redpacket", "treasure"].includes(kind)) this.group(id);
     try {
       return this.transaction(() => {

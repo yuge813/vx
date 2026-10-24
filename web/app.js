@@ -96,7 +96,12 @@ async function refresh() {
   ] = await Promise.all([
     api("/me"),
     api("/config"),
-    api("/group"),
+    api(
+      "/group" +
+        (state.page === "group" && !document.hidden && !state.busy
+          ? "?active=1"
+          : ""),
+    ),
     api("/ledger"),
     api("/withdrawals"),
     api("/referral"),
@@ -204,18 +209,22 @@ function adScheduleText() {
   const p = state.config.adPacing;
   return `开发广告位预览：信息流首次${p.native.firstDelay}秒，间隔至少${p.native.interval}秒；横幅首次${p.banner.firstDelay}秒，间隔至少${p.banner.interval}秒。每次位置预览${p.duration}秒，类型错开至少${p.minGap}秒，关闭后冷却${p.closeCooldown}秒。\n每会话最多${p.sessionLimit}次，本机本账户每日最多${p.dailyLimit}次。仅累计群页面前台空闲时间；切后台、离开或有奖励任务时暂停，不补弹。\n插屏关闭，未核实适用场景及规则。所有秒数为开发设计，不是微信许可频次。预览不计曝光、收入或金币，正式环境关闭。本机次数只用于体验控制，不是后端反作弊。`;
 }
-function roomPacket(b) {
+function roomPacket(b, contentText = "") {
   const saved = state.hidden[b.kind] === b.generation + ":" + b.coins;
   if (saved)
     return `<div class="chat-saved" data-bank="${b.kind}"><div>已暂存 <strong>${b.coins}金币</strong></div><small>金额保留，下一轮继续叠加。</small><button class="link" data-restore="${b.kind}">查看暂存${b.kind === "redpacket" ? "红包" : "宝箱"}</button></div>`;
   const ready = b.coins > 0;
-  return `<div class="chat-packet ${b.kind === "treasure" ? "is-treasure" : ""} ${!ready ? "is-waiting" : ""}" data-bank="${b.kind}"><button class="packet-open" data-claim="${b.kind}" ${!canClaim(b.kind, b) ? "disabled" : ""}><img src="/assets/${b.kind === "redpacket" ? "packet" : "chest"}.svg" alt=""><span class="packet-copy"><strong>${ready ? (b.kind === "redpacket" ? "恭喜发财，大吉大利" : "宝箱已准备，惊喜等你开") : b.kind === "redpacket" ? "下一份红包正在准备" : "下一份宝箱正在准备"}</strong><span>${b.locked ? "继续上次领取任务" : ready ? (b.kind === "redpacket" ? "点击领取红包" : "点击开启宝箱") : "倒计时结束后生成待领金额"}</span><b class="reward-value">${b.coins}<small> 金币</small></b></span></button>${ready && !b.locked ? `<button class="packet-close" data-skip="${b.kind}" aria-label="暂不打开，继续叠加">×</button>` : ""}<div class="packet-bottom"><span>${ready ? "开发奖励 · 非现金到账" : "系统准备中"}</span><span data-timer="${b.kind}"></span></div><div class="packet-track"><span data-bank-progress="${b.kind}"></span></div></div><div class="packet-hint">${b.atCap ? "已达本轮上限，可选择打开" : b.paused ? "新增累计暂停，已叠金币保留" : `每轮＋${b.increment} · 本轮上限${b.cap}`}</div>`;
+  return `<div class="chat-packet ${b.kind === "treasure" ? "is-treasure" : ""} ${!ready ? "is-waiting" : ""}" data-bank="${b.kind}"><button class="packet-open" data-claim="${b.kind}" ${!canClaim(b.kind, b) ? "disabled" : ""}><img src="/assets/${b.kind === "redpacket" ? "packet" : "chest"}.svg" alt=""><span class="packet-copy"><strong>${esc(ready ? contentText || (b.kind === "redpacket" ? "恭喜发财，大吉大利" : "宝箱已准备，惊喜等你开") : b.kind === "redpacket" ? "下一份红包正在准备" : "下一份宝箱正在准备")}</strong><span>${b.locked ? "继续上次领取任务" : ready ? (b.kind === "redpacket" ? "点击领取红包" : "点击开启宝箱") : "倒计时结束后生成待领金额"}</span><b class="reward-value">${b.coins}<small> 金币</small></b></span></button>${ready && !b.locked ? `<button class="packet-close" data-skip="${b.kind}" aria-label="暂不打开，继续叠加">×</button>` : ""}<div class="packet-bottom"><span>${ready ? "开发奖励 · 非现金到账" : "系统准备中"}</span><span data-timer="${b.kind}"></span></div><div class="packet-track"><span data-bank-progress="${b.kind}"></span></div></div><div class="packet-hint">${b.atCap ? "已达本轮上限，可选择打开" : b.paused ? "新增累计暂停，已叠金币保留" : `每轮＋${b.increment} · 本轮上限${b.cap}`}</div>`;
 }
 function roomMessage(row) {
-  const avatar = `<div class="room-avatar avatar-${row.type === "packet" ? row.bank.kind : row.type}">${esc(row.mark)}</div>`;
-  const head = `<div class="message-head"><span>${esc(row.actor)}</span>${row.createdAt ? `<time>${shortTime(row.createdAt)}</time>` : "<small>系统</small>"}</div>`;
+  const avatar = row.avatar
+    ? `<img class="room-avatar portrait-avatar" src="/assets/${esc(row.avatar)}.svg" alt="${esc(row.actor)}的活动头像">`
+    : `<div class="room-avatar avatar-${row.type === "packet" ? row.bank.kind : row.type}">${esc(row.mark)}</div>`;
+  const head = `<div class="message-head"><span class="message-sender">${esc(row.actor)}${row.badge ? `<small class="assistant-badge">${esc(row.badge)}</small>` : ""}</span>${row.createdAt ? `<time>${shortTime(row.createdAt)}</time>` : "<small>系统</small>"}</div>`;
   let body;
-  if (row.type === "packet") body = roomPacket(row.bank);
+  if (row.type === "packet") body = roomPacket(row.bank, row.text);
+  else if (row.type === "packet_history")
+    body = `<div class="history-packet ${row.packetKind === "treasure" ? "history-treasure" : ""}"><span class="history-envelope">${icon(row.packetKind === "treasure" ? "chest" : "packet")}</span><div><strong>${esc(row.text)}</strong><small>${esc(row.detail)}</small></div></div>`;
   else if (row.type === "ad")
     body = `<div class="chat-ad" data-ad-preview="native"><div class="ad-art">${icon("video")}</div><div><strong>${esc(row.text)}</strong><span>${esc(row.detail)}</span><small>开发占位 · 未接入</small></div><button data-action="hide-ad" aria-label="关闭广告占位">×</button></div>`;
   else
@@ -238,7 +247,7 @@ function group() {
     state.adPreview.current?.format === "banner"
       ? `<aside class="room-ad-banner" data-ad-preview="banner"><span class="banner-badge">横幅预览</span><div><strong>等待期广告展示位置</strong><small>开发布局 · 无真实广告与收益</small></div><button data-action="hide-ad" aria-label="关闭横幅预览">×</button></aside>`
       : "";
-  return `<section class="room-shell"><header class="room-top"><h1 title="${esc(room.title)}（${room.memberCount}）">${esc(room.title)}<span>（${room.memberCount}）</span></h1><div class="room-wallet"><span class="coin-emblem">金</span><strong>${state.user.balance.toLocaleString()}</strong><button class="room-withdraw" data-nav="wallet" aria-label="打开演示提现钱包">提现</button></div></header><div class="room-mode">开发联调 · 金币不可兑现 · 人数为注册账户数，非在线人数</div><div class="room-stage"><button class="lucky-float" data-nav="bag" aria-label="打开幸运福袋"><span class="lucky-tip">点击领奖</span><img src="/assets/bag.svg" alt=""><strong>福袋</strong></button><div class="room-scroll feed">${rows.map(roomMessage).join("")}<div class="room-end">本账户的系统动态</div></div></div>${banner}<footer class="room-tools"><button class="link" data-action="rules">玩法说明</button>${state.adPreview.enabled ? `<button class="link" data-action="ad-schedule" data-ad-status>广告预览 ${state.adPreview.sessionCount}/${state.config.adPacing.sessionLimit}</button>` : ""}${state.user.pendingTask ? '<button class="link" data-action="resume">恢复未完成任务</button>' : ""}${state.config.mode === "development" ? '<button class="link" data-action="advance">开发：推进一轮</button>' : ""}</footer></section>`;
+  return `<section class="room-shell"><header class="room-top"><h1 title="${esc(room.title)}（${room.memberCount}）">${esc(room.title)}<span>（${room.memberCount}）</span></h1><div class="room-wallet"><span class="coin-emblem">金</span><strong>${state.user.balance.toLocaleString()}</strong><button class="room-withdraw" data-nav="wallet" aria-label="打开演示提现钱包">提现</button></div></header><div class="room-mode">开发联调 · 金币不可兑现 · 人数为注册账户数，非在线人数</div><div class="room-disclosure">${esc(state.group.roomDisclosure)}</div><div class="room-stage"><button class="lucky-float" data-nav="bag" aria-label="打开幸运福袋"><span class="lucky-tip">点击领奖</span><img src="/assets/bag.svg" alt=""><strong>福袋</strong></button><div class="room-scroll feed">${rows.map(roomMessage).join("")}<div class="room-end">活动消息由运营方发布 · 金币以账户流水为准</div></div></div>${banner}<footer class="room-tools"><button class="link" data-action="rules">玩法说明</button>${state.adPreview.enabled ? `<button class="link" data-action="ad-schedule" data-ad-status>广告预览 ${state.adPreview.sessionCount}/${state.config.adPacing.sessionLimit}</button>` : ""}${state.user.pendingTask ? '<button class="link" data-action="resume">恢复未完成任务</button>' : ""}${state.config.mode === "development" ? '<button class="link" data-action="advance">开发：推进一轮</button>' : ""}</footer></section>`;
 }
 function bag() {
   const c = state.config;
@@ -520,9 +529,12 @@ document.addEventListener("click", async (e) => {
   if (!b || b.disabled || state.busy) return;
   try {
     if (b.dataset.nav) {
+      if (state.page === "group" && b.dataset.nav !== "group")
+        api("/group/presence", "POST", { active: false }).catch(() => {});
       state.page = b.dataset.nav;
       render();
       window.scrollTo(0, 0);
+      if (state.page === "group") refreshRoom();
       return;
     }
     if (b.dataset.claim) {
@@ -584,7 +596,7 @@ document.addEventListener("click", async (e) => {
       );
     if (a === "privacy")
       window.alert(
-        "开发版保存安装标识、会话、任务、金币流水、演示申请、单层邀请关系及反馈；本机保存广告位预览次数和关闭冷却，不上报为广告曝光或收入。不读取通讯录、位置、相册或剪贴板。正式运营还需主体隐私声明、保留期限、注销和企业客服流程。",
+        "开发版保存安装标识、会话、任务、金币流水、演示申请、单层邀请关系、活动消息进度与发布记录及反馈；本机保存广告位预览次数和关闭冷却，不上报为广告曝光或收入。不读取通讯录、位置、相册或剪贴板。正式运营还需主体隐私声明、保留期限、注销和企业客服流程。",
       );
     if (a === "retry") await initialize();
   } catch (e) {
@@ -632,9 +644,14 @@ document.addEventListener("submit", (e) => {
     });
   }
 });
-document.addEventListener("visibilitychange", tick);
+document.addEventListener("visibilitychange", () => {
+  tick();
+  if (document.hidden && state.user)
+    api("/group/presence", "POST", { active: false }).catch(() => {});
+  else refreshRoom();
+});
 setInterval(tick, 1000);
-setInterval(async () => {
+async function refreshRoom() {
   if (
     state.page !== "group" ||
     state.busy ||
@@ -646,16 +663,17 @@ setInterval(async () => {
     return;
   pollBusy = true;
   try {
-    state.group = await api("/group");
+    state.group = await api("/group?active=1");
     state.user = state.group.user;
     state.offset = state.group.serverTime - Date.now();
-    render();
+    if (state.page === "group") render();
   } catch (e) {
     toast(e.message);
   } finally {
     pollBusy = false;
   }
-}, 5000);
+}
+setInterval(refreshRoom, 5000);
 initialize().catch((e) => {
   $("#app").innerHTML =
     `<div class="error">${esc(e.message)}<button class="button light" data-action="retry">重新连接</button></div>`;

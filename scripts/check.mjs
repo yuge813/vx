@@ -59,7 +59,17 @@ for (const tab of app.tabBar.list)
     const png = readFileSync("miniprogram/" + file);
     assert.equal(png.subarray(1, 4).toString(), "PNG", "导航图标必须是PNG");
   }
-for (const name of ["packet", "chest", "bag"]) {
+for (const name of [
+  "packet",
+  "chest",
+  "bag",
+  "avatar-peach",
+  "avatar-leaf",
+  "avatar-cat",
+  "avatar-river",
+  "avatar-sun",
+  "avatar-moon",
+]) {
   const png = readFileSync("miniprogram/assets/" + name + ".png");
   assert.equal(png.subarray(1, 4).toString(), "PNG");
 }
