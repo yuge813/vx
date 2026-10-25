@@ -6,3 +6,7 @@ coverage/
 node_modules/
 project.private.config.json
 *.log
+backups/
+dist/
+.env.*.local
+*.user.bak

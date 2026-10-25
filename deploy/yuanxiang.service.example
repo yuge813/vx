@@ -1,0 +1,19 @@
+[Unit]
+Description=Yuanxiang-style internal review service
+After=network.target
+[Service]
+Type=simple
+User=yuanxiang
+Group=yuanxiang
+WorkingDirectory=/opt/yuanxiang
+ExecStart=/usr/bin/node --env-file=/opt/yuanxiang/.env.yuanxiang /opt/yuanxiang/server/index.mjs
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/yuanxiang/data /opt/yuanxiang/backups
+[Install]
+WantedBy=multi-user.target

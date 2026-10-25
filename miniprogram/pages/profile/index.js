@@ -61,11 +61,6 @@ Page({
     });
   },
   privacy() {
-    wx.showModal({
-      title: "数据说明",
-      content:
-        "后端保存账户、任务、流水、演示申请、邀请关系、活动消息进度与发布记录和反馈；本机保存广告位预览次数和关闭冷却，不上报为广告曝光或收入。不读取通讯录、位置、相册或剪贴板。正式运营仍需完善企业隐私声明、保留期限、注销及客服流程。",
-      showCancel: false,
-    });
+    wx.navigateTo({ url: "/pages/privacy/index" });
   },
 });

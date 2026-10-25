@@ -1,4 +1,12 @@
-import { $, esc, icon, date, shortTime, toast } from "./shared.js";
+import {
+  $,
+  esc,
+  icon,
+  date,
+  shortTime,
+  toast,
+  downloadJSON,
+} from "./shared.js";
 const state = {
   page: "home",
   user: null,
@@ -6,6 +14,7 @@ const state = {
   group: null,
   ledger: [],
   orders: [],
+  historyCursor: null,
   referral: null,
   support: [],
   busy: false,
@@ -283,7 +292,7 @@ function records() {
       "每一笔金币，都有记录。",
       "基础、补贴、冻结、退回和模拟完成分开保留。",
     ) +
-    `<section class="card"><div class="row"><h2>最近100笔流水</h2><span class="pill">服务端账务</span></div>${recentLedger(100)}</section>`
+    `<section class="card"><div class="row"><h2>金币流水（可分页）</h2><span class="pill">服务端账务</span></div>${recentLedger(10000)}${state.historyCursor ? '<button class="button light full" data-action="history-more">加载更早记录</button>' : ""}</section>`
   );
 }
 function invite() {
@@ -333,7 +342,7 @@ function profile() {
       )
       .join(
         "",
-      )}<button class="profile-link" data-action="rules"><span>${icon("records")}玩法及奖励规则</span>${icon("arrow")}</button><button class="profile-link" data-action="capabilities"><span>${icon("lock")}广告与支付能力</span>${icon("arrow")}</button><button class="profile-link" data-action="privacy"><span>${icon("profile")}数据与隐私说明</span>${icon("arrow")}</button><a class="profile-link" href="/admin"><span>${icon("records")}运营管理后台</span>${icon("arrow")}</a></section>${state.user.pendingTask ? '<button class="button light full" data-action="resume">恢复未完成任务</button>' : ""}</div><aside><section class="card"><h2>今日剩余次数</h2>${Object.entries(
+      )}<button class="profile-link" data-action="rules"><span>${icon("records")}玩法及奖励规则</span>${icon("arrow")}</button><button class="profile-link" data-action="capabilities"><span>${icon("lock")}广告与支付能力</span>${icon("arrow")}</button><button class="profile-link" data-nav="privacy"><span>${icon("profile")}数据与隐私说明</span>${icon("arrow")}</button><a class="profile-link" href="/admin"><span>${icon("records")}运营管理后台</span>${icon("arrow")}</a></section>${state.user.pendingTask ? '<button class="button light full" data-action="resume">恢复未完成任务</button>' : ""}</div><aside><section class="card"><h2>今日剩余次数</h2>${Object.entries(
       { signin: "签到", redpacket: "红包", treasure: "宝箱", bag: "福袋" },
     )
       .map(
@@ -343,6 +352,18 @@ function profile() {
       .join(
         "",
       )}<p class="caption">同时受每日总上限约束。所有次数由后端核验，不能通过改页面绕过。</p></section><section class="card art-card"><img src="/assets/chest.svg" alt="原创宝箱插画"><h2>基础奖励与补贴，分开入账。</h2><p class="caption">任务创建后固定金额，后台改规则不追减已承诺奖励。</p></section></aside></div>`
+  );
+}
+function privacy() {
+  const u = state.user,
+    c = u.closureRequest;
+  return (
+    header(
+      "ACCOUNT AND PRIVACY",
+      "账户与隐私",
+      "管理昵称、导出最近记录、退出会话及申请注销。",
+    ) +
+    `<div class="grid"><div><section class="card"><h2>个人昵称</h2><form id="profile-name-form"><input class="field" name="name" minlength="1" maxlength="16" value="${esc(u.name)}" required><button class="button small" type="submit">保存昵称</button></form></section><section class="card"><h2>数据说明 · 内部审核稿</h2><p class="caption">运营主体：${esc(state.config.operator?.name || "待配置")} · 联系方式：${esc(state.config.operator?.contact || "待配置")}</p><p class="muted">保存登录关联、账户、任务、流水、演示申请、邀请关系、群消息进度与反馈。本机保存会话、任务恢复及广告位预览冷却，不读取通讯录、位置或相册。</p><p class="muted">导出本账户最近100条各类记录，隐藏微信openid、会话和密钥。更多金币流水在记录页分页查看。正式运营前需完善企业主体、客服、保存期限及适用平台隐私声明。</p><button class="button light" data-action="export-account">导出最近账户JSON</button></section><button class="button secondary" data-action="logout">退出全部登录会话</button></div><section class="card"><h2>申请注销账户</h2>${c ? `<div class="notice">状态：${esc(({pending:"待审核",approved:"已注销",rejected:"已退回"})[c.state] || c.state)} ${esc(c.decision || "")}</div>` : ""}<p class="muted">先处理已入账余额、冻结申请和未完成任务。确认放弃未领取的开发奖励；审核后移除登录关联与非账务文本，保留必要账务及审计。申请处理中暂停新增奖励。</p><form id="account-closure-form"><textarea class="field" name="reason" minlength="2" maxlength="200" required placeholder="2—200字申请原因"></textarea><label class="room-checkbox"><input type="checkbox" name="discardUnclaimed" required>确认放弃尚未领取的开发奖励并了解保留范围</label><button class="button" type="submit" ${u.balance || u.frozen || u.pendingTask || c?.state === "pending" ? "disabled" : ""}>提交注销申请</button></form></section></div>`
   );
 }
 function render() {
@@ -361,7 +382,7 @@ function render() {
     .join("");
   $("#app").innerHTML =
     (
-      { home, group, bag, wallet, records, invite, support, profile }[
+      { home, group, bag, wallet, records, invite, support, profile, privacy }[
         state.page
       ] || home
     )() +
@@ -535,6 +556,12 @@ document.addEventListener("click", async (e) => {
       render();
       window.scrollTo(0, 0);
       if (state.page === "group") refreshRoom();
+      if (state.page === "records") {
+        const history = await api("/history?type=ledger");
+        state.ledger = history.items;
+        state.historyCursor = history.nextCursor;
+        render();
+      }
       return;
     }
     if (b.dataset.claim) {
@@ -599,6 +626,28 @@ document.addEventListener("click", async (e) => {
         "开发版保存安装标识、会话、任务、金币流水、演示申请、单层邀请关系、活动消息进度与发布记录及反馈；本机保存广告位预览次数和关闭冷却，不上报为广告曝光或收入。不读取通讯录、位置、相册或剪贴板。正式运营还需主体隐私声明、保留期限、注销和企业客服流程。",
       );
     if (a === "retry") await initialize();
+    if (a === "history-more") {
+      const r = await api("/history?type=ledger&cursor=" + state.historyCursor);
+      state.ledger = [...state.ledger, ...r.items];
+      state.historyCursor = r.nextCursor;
+      render();
+    }
+    if (a === "export-account")
+      downloadJSON("我的最近账户记录.json", await api("/account/export"));
+    if (
+      a === "logout" &&
+      window.confirm("退出全部已有会话？账户数据将保留。")
+    ) {
+      await api("/auth/logout", "POST", { all: true });
+      for (const key of ["yx.token", "yx.task", "yx.withdrawal"])
+        localStorage.removeItem(key);
+      token = "";
+      state.user = null;
+      state.page = "home";
+      adPacer = null;
+      $("#app").innerHTML =
+        '<section class="card"><h1>已有会话已退出</h1><p>账户数据保留，重新登录后继续查看。</p><button class="button" data-action="retry">重新登录</button></section>';
+    }
   } catch (e) {
     toast(e.message);
   }
@@ -606,6 +655,22 @@ document.addEventListener("click", async (e) => {
 document.addEventListener("submit", (e) => {
   e.preventDefault();
   if (state.busy) return;
+  if (e.target.id === "profile-name-form") {
+    run(() =>
+      api("/profile", "PUT", { name: new FormData(e.target).get("name") }),
+    );
+  }
+  if (
+    e.target.id === "account-closure-form" &&
+    window.confirm("确认提交注销申请，并放弃未领取的开发奖励？")
+  ) {
+    run(() =>
+      api("/account/closure", "POST", {
+        reason: new FormData(e.target).get("reason"),
+        discardUnclaimed: true,
+      }),
+    );
+  }
   if (e.target.id === "withdraw-form") {
     const coins = Number($("#withdraw-coins").value);
     run(async () => {

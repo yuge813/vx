@@ -1,7 +1,7 @@
-const { API_BASE } = require("../config");
+const { API_BASE, CONFIG_ERROR, ENV_VERSION } = require("../config");
 let token = wx.getStorageSync("yx_token") || "",
   config = null;
-function request(path, method = "GET", data) {
+function requestOnce(path, method = "GET", data) {
   return new Promise((resolve, reject) =>
     wx.request({
       url: API_BASE + path,
@@ -29,13 +29,50 @@ function request(path, method = "GET", data) {
         reject(e);
       },
       fail() {
-        reject(new Error("连接失败，请重新查询原任务或原订单"));
+        const e = new Error("连接失败，请重新查询原任务或原订单");
+        e.retryable = true;
+        reject(e);
       },
     }),
   );
 }
+async function request(path, method = "GET", data) {
+  try {
+    return await requestOnce(path, method, data);
+  } catch (e) {
+    if (method !== "GET" || !e.retryable) throw e;
+    await new Promise((r) => setTimeout(r, 250));
+    return requestOnce(path, method, data);
+  }
+}
+async function logout(all = false) {
+  await request("/api/auth/logout", "POST", { all });
+  token = "";
+  config = null;
+  for (const key of ["yx_token", "yx_pending_task", "yx_pending_withdrawal"])
+    wx.removeStorageSync(key);
+  getApp()._ready = null;
+}
+let activeClaim = null;
+function claim(kind) {
+  if (activeClaim)
+    return activeClaim.kind === kind
+      ? activeClaim.promise
+      : Promise.reject(new Error("请先完成或恢复当前奖励任务"));
+  const promise = claimOnce(kind).finally(() => {
+    activeClaim = null;
+  });
+  activeClaim = { kind, promise };
+  return promise;
+}
 async function initialize() {
+  if (CONFIG_ERROR) throw new Error(CONFIG_ERROR);
   config = await request("/api/config");
+  if (
+    (ENV_VERSION === "release" || ENV_VERSION === "trial") &&
+    config.mode !== "production"
+  )
+    throw new Error("体验版和正式版不能连接开发演示后端");
   if (token)
     try {
       await request("/api/me");
@@ -66,7 +103,7 @@ const modal = (options) =>
   new Promise((resolve, reject) =>
     wx.showModal({ ...options, success: resolve, fail: reject }),
   );
-async function claim(kind) {
+async function claimOnce(kind) {
   await getApp().ready();
   config = await request("/api/config");
   if (config.adProvider !== "demo") throw new Error("真实广告及验证尚未接入");
@@ -160,6 +197,7 @@ function toast(e) {
 module.exports = {
   initialize,
   request,
+  logout,
   claim,
   money,
   time,

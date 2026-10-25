@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    init: true
+    env_file: .env.yuanxiang
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8792
+      DB_PATH: /app/data/yuanxiang.sqlite
+    ports:
+      - "127.0.0.1:8792:8792"
+    volumes:
+      - yuanxiang-data:/app/data
+      - yuanxiang-backups:/app/backups
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  yuanxiang-data:
+  yuanxiang-backups:

@@ -258,3 +258,56 @@ test("原生聊天群页面加载真实卡片、暂存与恢复、金额更新�
   page.wallet();
   assert.deepEqual(routes, ["/pages/bag/index", "/pages/wallet/index"]);
 });
+
+test("原生奖励任务全局互斥，同类并发复用一次任务，不同类型被阻止", async (t) => {
+  const { client, store } = await clientFixture(t, true);
+  const a = client.claim("signin"),
+    b = client.claim("signin");
+  assert.equal(a, b);
+  await assert.rejects(client.claim("bag"), /先完成/);
+  const result = await a;
+  assert.equal(result.user.balance, 620);
+  assert.equal(
+    store.db
+      .prepare("SELECT COUNT(*) AS n FROM tasks WHERE kind='signin'")
+      .get().n,
+    1,
+  );
+});
+
+test("原生隐私页修改昵称、导出、注销申请及退出真实会话", async (t) => {
+  const { client, store, storage } = await clientFixture(t, true);
+  let page;
+  const wx = { showToast() {}, showModal() {}, setClipboardData() {} };
+  vm.runInNewContext(
+    readFileSync(
+      new URL("../miniprogram/pages/privacy/index.js", import.meta.url),
+      "utf8",
+    ),
+    {
+      require: () => client,
+      getApp: () => ({ ready: () => Promise.resolve() }),
+      wx,
+      Page: (definition) => (page = definition),
+    },
+  );
+  page.setData = function (patch) {
+    Object.assign(this.data, patch);
+  };
+  await page.load();
+  const id = page.data.user.id;
+  page.data.name = "原生隐私测试";
+  await page.rename();
+  assert.equal(store.profile(id).name, "原生隐私测试");
+  await page.exportData();
+  assert.equal(JSON.parse(page.data.exportText).profile.id, id);
+  assert.equal("identity" in JSON.parse(page.data.exportText).profile, false);
+  page.data.agreed = true;
+  page.data.reason = "停止使用原生开发账户";
+  await page.closure();
+  assert.equal(store.profile(id).closureRequest.state, "pending");
+  await page.logout();
+  assert.equal(page.data.loggedOut, true);
+  assert.equal(storage.has("yx_token"), false);
+  await assert.rejects(client.request("/api/me"), (e) => e.status === 401);
+});

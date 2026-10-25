@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { randomUUID, randomBytes, randomInt, createHash } from "node:crypto";
 import { buildRoomMessages } from "./room-view.mjs";
 import { RoomContent } from "./room-content.mjs";
+import { Operations } from "./operations.mjs";
 const need = (v, m, status = 400, code = "INVALID_REQUEST") => {
   if (!v) throw new AppError(m, status, code);
 };
@@ -92,6 +93,12 @@ export class YuanxiangStore extends Store {
         this.db.prepare("INSERT INTO yuanxiang_meta VALUES(1,1)").run();
       });
     this.roomContent = new RoomContent(this);
+    this.operations = new Operations(this);
+    this.operator = options.operator || {
+      name: "待配置运营主体",
+      contact: "内部后台反馈，正式企业客服未配置",
+      privacyURL: "",
+    };
   }
   settings() {
     return { ...extra, ...super.settings() };
@@ -100,6 +107,8 @@ export class YuanxiangStore extends Store {
     return {
       ...super.publicConfig(),
       brand: "悦享金币",
+      appVersion: "0.4.0",
+      operator: this.operator,
       packetRules: `新一轮红包与宝箱每${this.settings().packetIntervalSeconds}秒累计${this.settings().packetIncrement}金币，上限${this.settings().packetCap}；均为开发参数`,
       prizes: this.prizes(),
       adSlots: {
@@ -235,6 +244,7 @@ export class YuanxiangStore extends Store {
     );
     return {
       ...p,
+      closureRequest: this.operations?.accountState(id) || null,
       week: p.week.map((d) => ({
         ...d,
         dayNumber: d.day.slice(8),
@@ -264,16 +274,31 @@ export class YuanxiangStore extends Store {
     return Object.fromEntries(
       Object.keys(names).map((kind) => [
         kind,
-        Math.max(
-          0,
-          Math.min(
-            (user.daily_limit ?? s.dailyAdLimit) -
-              Object.values(counts).reduce((a, b) => a + b, 0),
-            s[kind + "Limit"] - (counts[kind] || 0),
-          ),
-        ),
+        user.status !== "active" || this.operations?.closing(id)
+          ? 0
+          : Math.max(
+              0,
+              Math.min(
+                (user.daily_limit ?? s.dailyAdLimit) -
+                  Object.values(counts).reduce((a, b) => a + b, 0),
+                s[kind + "Limit"] - (counts[kind] || 0),
+              ),
+            ),
       ]),
     );
+  }
+  ensureActive(id) {
+    super.ensureActive(id);
+    need(
+      !this.operations?.closing(id),
+      "注销申请处理中，已暂停新增奖励任务",
+      403,
+      "ACCOUNT_CLOSING",
+    );
+  }
+  updateUser(id, patch) {
+    need(this.user(id).status !== "closed", "已注销账户不能恢复或修改", 409);
+    return super.updateUser(id, patch);
   }
   checkin() {
     throw new AppError(
@@ -298,7 +323,8 @@ export class YuanxiangStore extends Store {
     this.pruneExpired();
     return this.transaction(() => {
       this.ensureBanks(id);
-      const active = this.user(id).status === "active",
+      const active =
+          this.user(id).status === "active" && !this.operations.closing(id),
         banks = [];
       for (let bank of this.db
         .prepare("SELECT * FROM banks WHERE user_id=? ORDER BY kind")
@@ -382,7 +408,7 @@ export class YuanxiangStore extends Store {
           roomContent: this.roomContent.read(
             id,
             banks,
-            roomActive && !result.user.pendingTask,
+            roomActive && active && !result.user.pendingTask,
           ),
         }),
         roomDisclosure: "活动助手由运营方管理，非真实群友聊天。",

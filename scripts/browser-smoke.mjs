@@ -219,7 +219,7 @@ try {
   await b.viewport(1440, 1100);
   await shot("desktop-group-chat");
   await b.send("Page.navigate", { url: base + "/admin" });
-  await b.until("Boolean(document.querySelector('#admin-token'))");
+  await b.until("document.body.dataset.adminReady==='true'");
   await b.evaluate(
     `document.querySelector('#admin-token').value=${JSON.stringify(admin)};document.querySelector('#login-form').requestSubmit()`,
   );

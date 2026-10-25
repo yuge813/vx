@@ -2066,3 +2066,28 @@ nav button.active {
     flex-wrap: wrap;
   }
 }
+.reconcile-good {
+  color: #517b61;
+  background: #eef5ef;
+  border: 1px solid #d9e8dc;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+#profile-name-form .field,
+#account-closure-form .field {
+  width: 100%;
+  margin: 12px 0;
+}
+#business-entry-form .field-label {
+  display: block;
+  margin: 10px 0;
+  font-size: 12px;
+}
+#business-entry-form .field {
+  display: block;
+  margin-top: 6px;
+  width: 100%;
+}
+#user-detail-result small {
+  display: block;
+}

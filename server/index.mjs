@@ -2,9 +2,10 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { resolve, extname, sep } from "node:path";
-import { timingSafeEqual } from "node:crypto";
+import { timingSafeEqual, randomUUID } from "node:crypto";
 import { Store, AppError } from "./store.mjs";
 import { YuanxiangStore } from "./yuanxiang.mjs";
+import { runtimeConfig } from "./runtime-config.mjs";
 
 const publicRoot = fileURLToPath(new URL("../web/", import.meta.url));
 const fail = (message, status = 400, code) => {
@@ -53,8 +54,22 @@ export function createApp({
   )
     throw new Error("PUBLIC_ORIGIN必须是HTTP或HTTPS源站，不带路径或末尾斜线");
   const limits = new Map();
+  const takeLimit = (key, limit, res) => {
+    const now = Date.now();
+    let bucket = limits.get(key);
+    if (!bucket || now > bucket.until) {
+      bucket = { n: 0, until: now + 60000 };
+      limits.set(key, bucket);
+    }
+    if (++bucket.n > limit) {
+      res.setHeader("Retry-After", "60");
+      fail("请求过于频繁，请稍后再试", 429);
+    }
+  };
   let lastSweep = 0;
   const server = createServer(async (req, res) => {
+    const requestId = randomUUID();
+    res.setHeader("X-Request-ID", requestId);
     const send = (status, value) => {
       res.writeHead(status, {
         "Content-Type": "application/json; charset=utf-8",
@@ -80,7 +95,7 @@ export function createApp({
         }
         const group = path.startsWith("/api/auth/") ? "auth" : "api";
         const key = `${req.socket.remoteAddress}:${group}`,
-          limit = group === "auth" ? 30 : 240;
+          limit = group === "auth" ? 30 : 2000;
         let bucket = limits.get(key);
         if (!bucket || now > bucket.until) {
           bucket = { n: 0, until: now + 60000 };
@@ -158,6 +173,7 @@ export function createApp({
         if (path.startsWith("/api/admin/")) {
           if (adminToken.length < 32 || !sameSecret(token, adminToken))
             fail("管理员令牌无效或尚未配置", 401);
+          takeLimit("admin:" + req.socket.remoteAddress, 600, res);
           if (
             extension &&
             (await extension({
@@ -195,6 +211,8 @@ export function createApp({
           fail("接口不存在", 404);
         }
         const userId = store.authenticate(token);
+        takeLimit("user:" + userId, 600, res);
+        if (req.method !== "GET") takeLimit("write:" + userId, 120, res);
         if (
           extension &&
           (await extension({
@@ -292,7 +310,7 @@ export function createApp({
       res.end(content);
     } catch (error) {
       if (!(error instanceof AppError))
-        console.error("请求处理异常", error.name); // 不记录请求体、令牌或上游凭据。
+        console.error("请求处理异常", requestId, error.name); // 不记录请求体、令牌或上游凭据。
       send(error instanceof AppError ? error.status : 500, {
         error: {
           code: error.code || "INTERNAL_ERROR",
@@ -320,6 +338,63 @@ export async function yuanxiangRoutes({
 }) {
   let match;
   if (admin) {
+    const query = new URL(req.url, "http://localhost").searchParams;
+    if (req.method === "GET" && path === "/api/admin/users") {
+      send(
+        200,
+        store.operations.users(
+          query.get("q") || "",
+          Number(query.get("page") || 1),
+        ),
+      );
+      return true;
+    }
+    if (
+      req.method === "GET" &&
+      (match = path.match(/^\/api\/admin\/users\/([a-f0-9-]+)\/detail$/))
+    ) {
+      send(200, store.operations.userDetail(match[1]));
+      return true;
+    }
+    if (req.method === "GET" && path === "/api/admin/report") {
+      send(200, store.operations.report(Number(query.get("days") || 7)));
+      return true;
+    }
+    if (req.method === "GET" && path === "/api/admin/reconciliation") {
+      send(200, store.operations.reconcile());
+      return true;
+    }
+    if (req.method === "POST" && path === "/api/admin/business-entries") {
+      send(200, store.operations.addBusiness(await readBody()));
+      return true;
+    }
+    if (
+      req.method === "POST" &&
+      (match = path.match(
+        /^\/api\/admin\/business-entries\/([a-f0-9-]+)\/void$/,
+      ))
+    ) {
+      send(
+        200,
+        store.operations.voidBusiness(match[1], (await readBody()).reason),
+      );
+      return true;
+    }
+    if (req.method === "GET" && path === "/api/admin/closures") {
+      send(200, store.operations.closureList());
+      return true;
+    }
+    if (
+      req.method === "POST" &&
+      (match = path.match(/^\/api\/admin\/closures\/([a-f0-9-]+)\/review$/))
+    ) {
+      const data = await readBody();
+      send(
+        200,
+        store.operations.reviewClosure(match[1], data.action, data.reason),
+      );
+      return true;
+    }
     if (req.method === "GET" && path === "/api/admin/room-content") {
       send(200, store.roomContent.admin());
       return true;
@@ -360,6 +435,42 @@ export async function yuanxiangRoutes({
       return true;
     }
     return false;
+  }
+  if (req.method === "POST" && path === "/api/auth/logout") {
+    const data = await readBody();
+    send(
+      200,
+      store.operations.logout(
+        userId,
+        String(req.headers.authorization || "").replace(/^Bearer /, ""),
+        data.all === true,
+      ),
+    );
+    return true;
+  }
+  if (req.method === "PUT" && path === "/api/profile") {
+    send(200, store.operations.rename(userId, (await readBody()).name));
+    return true;
+  }
+  if (req.method === "GET" && path === "/api/account/export") {
+    send(200, store.operations.exportData(userId));
+    return true;
+  }
+  if (req.method === "POST" && path === "/api/account/closure") {
+    send(200, store.operations.requestClosure(userId, await readBody()));
+    return true;
+  }
+  if (req.method === "GET" && path === "/api/history") {
+    const query = new URL(req.url, "http://localhost").searchParams;
+    send(
+      200,
+      store.operations.history(
+        userId,
+        query.get("type") || "ledger",
+        query.get("cursor") || "",
+      ),
+    );
+    return true;
   }
   if (path.startsWith("/api/plans")) {
     send(404, {
@@ -416,27 +527,48 @@ if (
   process.argv[1] &&
   resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
-  const mode = process.env.APP_ENV || "development";
-  if (!["development", "production"].includes(mode))
-    throw new Error("APP_ENV 只能是 development 或 production");
-  const development = mode === "development",
-    provider = process.env.AD_PROVIDER || (development ? "demo" : "disabled");
-  if (!["demo", "disabled"].includes(provider))
-    throw new Error("当前只实现 demo/disabled 广告适配器");
+  let settings;
+  try {
+    settings = runtimeConfig();
+  } catch (e) {
+    console.error("配置检查失败：" + e.message);
+    process.exit(1);
+  }
+  const {
+    development,
+    provider,
+    path,
+    adminToken,
+    wxAppId,
+    wxAppSecret,
+    publicOrigin,
+    port,
+    host,
+    operator,
+  } = settings;
   const store = new YuanxiangStore({
-    path: process.env.DB_PATH || "./data/yuanxiang.sqlite",
+    path,
     development,
     adProvider: provider,
+    operator,
   });
   const { server } = createYuanxiangApp({
     store,
-    adminToken: process.env.ADMIN_TOKEN || "",
-    wxAppId: process.env.WX_APP_ID || "",
-    wxAppSecret: process.env.WX_APP_SECRET || "",
-    publicOrigin: process.env.PUBLIC_ORIGIN || "",
+    adminToken,
+    wxAppId,
+    wxAppSecret,
+    publicOrigin,
   });
-  const port = Number(process.env.PORT || 8792),
-    host = process.env.HOST || "127.0.0.1";
+  server.once("error", (error) => {
+    console.error(
+      "启动失败：" +
+        (error.code === "EADDRINUSE"
+          ? `端口${port}已占用，请关闭自己启动的旧服务或设置其他PORT`
+          : error.code || error.name),
+    );
+    store.close();
+    process.exitCode = 1;
+  });
   server.listen(port, host, () =>
     console.log(
       `悦享金币已启动，监听 ${host}:${port}；签到/红包群/福袋/金币钱包；真实广告与转账未接入。`,
@@ -446,7 +578,13 @@ if (
   const stop = () => {
     if (closing) return;
     closing = true;
+    server.closeIdleConnections();
+    const deadline = setTimeout(() => {
+      server.closeAllConnections();
+    }, 5000);
+    deadline.unref();
     server.close(() => {
+      clearTimeout(deadline);
       store.close();
       process.exit(0);
     });

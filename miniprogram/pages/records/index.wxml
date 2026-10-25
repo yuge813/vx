@@ -16,5 +16,12 @@
         >冻结变动 {{item.frozen_delta}} 金币</view
       ></view
     ></view
-  ></view
+  ><button
+    wx:if="{{cursor}}"
+    class="button light"
+    bindtap="more"
+    disabled="{{busy}}"
+  >
+    {{busy ? '正在加载…' : '加载更早记录'}}
+  </button></view
 >

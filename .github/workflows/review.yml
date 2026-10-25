@@ -1,0 +1,24 @@
+name: Internal review verification
+permissions:
+  contents: read
+on:
+  push:
+    branches: ["codex/yuanxiang-v1-review"]
+  pull_request:
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.19.0"
+      - run: npm run verify
+      - run: npm run setup && npm run doctor
+      - name: Browser end-to-end
+        run: |
+          export CHROMIUM_BIN="$(command -v google-chrome || command -v chromium)"
+          test -n "$CHROMIUM_BIN"
+          npm run test:browser
+          npm run test:ops-browser

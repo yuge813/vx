@@ -1,0 +1,75 @@
+<view class="page"
+  ><view class="eyebrow">ACCOUNT AND PRIVACY</view
+  ><view class="heading">账户与隐私</view
+  ><view wx:if="{{error}}" class="error" bindtap="load"
+    >{{error}} · 点击重试</view
+  ><view wx:if="{{loggedOut}}" class="card"
+    ><view class="title">已有会话已退出</view
+    ><view class="muted space">账户数据保留，重新登录后可继续查看。</view
+    ><button class="button" bindtap="login">重新登录</button></view
+  ><block wx:if="{{user}}"
+    ><view class="card"
+      ><view class="title">个人昵称</view
+      ><input
+        class="field space"
+        value="{{name}}"
+        maxlength="16"
+        bindinput="nameInput"
+        placeholder="1—16字昵称"
+      /><button
+        class="button small"
+        bindtap="rename"
+        disabled="{{busy || !name}}"
+      >
+        保存昵称
+      </button></view
+    ><view class="card"
+      ><view class="title">数据使用说明 · 内部审核稿</view
+      ><view class="caption space"
+        >运营主体：{{config.operator.name || '待配置'}} ·
+        联系方式：{{config.operator.contact || '待配置'}}</view
+      ><view class="muted space"
+        >保存登录关联、业务账户、任务、金币流水、演示申请、邀请关系、群消息进度及反馈。本机保存会话与任务恢复信息、广告位预览次数和关闭冷却。不读取通讯录、位置或相册，不构建设备商业权重。</view
+      ><view class="muted space"
+        >导出包含本账户最近100条各类记录，不含微信openid、会话和密钥；更多金币流水可在记录页分页查看。群角色为运营管理的活动助手。</view
+      ><view class="notice"
+        >真实广告和付款未接入。正式运营前需填写企业主体、客服、处理目的、保存期限及适用平台隐私声明，完成法务与微信审核。</view
+      ><button class="button light" bindtap="exportData" disabled="{{busy}}">
+        导出最近账户记录</button
+      ><button
+        wx:if="{{exportText}}"
+        class="button secondary"
+        bindtap="copyExport"
+      >
+        复制导出JSON（写入剪贴板）
+      </button></view
+    ><view class="card"
+      ><view class="title">申请注销</view
+      ><view wx:if="{{user.closureRequest}}" class="notice"
+        >申请状态：{{closureLabel}} {{user.closureRequest.decision || ''}}</view
+      ><view class="muted space"
+        >先处理已入账余额、冻结申请和未完成任务。未领取的开发奖励可在确认后放弃。申请处理中暂停新增奖励；审核通过后移除登录关联及非账务文本，必要账务与审计保留，不承诺删除依法应保留的数据。</view
+      ><textarea
+        class="feedback-input space"
+        value="{{reason}}"
+        maxlength="200"
+        bindinput="reasonInput"
+        placeholder="填写2—200字申请原因"
+      /><checkbox-group bindchange="agree"
+        ><label class="caption"
+          ><checkbox
+            value="yes"
+          />我确认放弃未领取的开发奖励并了解保留范围</label
+        ></checkbox-group
+      ><button
+        class="button secondary"
+        bindtap="closure"
+        disabled="{{busy || !agreed || reason.length < 2 || user.balance || user.frozen || user.pendingTask || user.closureRequest.state === 'pending'}}"
+      >
+        提交注销申请
+      </button></view
+    ><button class="button light" bindtap="logout" disabled="{{busy}}">
+      退出全部登录会话
+    </button></block
+  ></view
+>
