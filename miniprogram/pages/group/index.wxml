@@ -68,7 +68,7 @@
               >
               <view
                 wx:else
-                class="chat-packet {{item.bank.kind === 'treasure' ? 'is-treasure' : ''}} {{!item.bank.ready ? 'is-waiting' : ''}}"
+                class="chat-packet {{item.bank.kind === 'treasure' ? 'is-treasure' : 'is-envelope'}} {{!item.bank.ready ? 'is-waiting' : ''}}"
               >
                 <button
                   class="packet-open"
@@ -76,14 +76,20 @@
                   disabled="{{item.bank.disabled}}"
                   bindtap="claim"
                 >
-                  <image
+                  <view
+                    wx:if="{{item.bank.kind === 'redpacket'}}"
+                    class="packet-envelope"
+                    ><view class="envelope-flap"></view
+                    ><text class="envelope-seal">金</text></view
+                  ><image
+                    wx:else
                     src="/assets/{{item.bank.art}}.png"
                     mode="aspectFill"
                   /><view class="packet-copy"
                     ><view class="packet-greeting">{{item.bank.greeting}}</view
                     ><view class="packet-action">{{item.bank.action}}</view
                     ><view class="packet-value"
-                      >{{item.bank.coins}}<text> 金币</text></view
+                      >{{item.bank.coins}}<text> 金币待领</text></view
                     ></view
                   >
                 </button>
@@ -97,8 +103,8 @@
                 </button>
                 <view class="packet-bottom"
                   ><text
-                    >{{item.bank.ready ? '开发奖励 · 非现金到账' :
-                    '系统准备中'}}</text
+                    >{{item.bank.kind === 'redpacket' ? '金币红包' :
+                    '金币宝箱'}} · 开发奖励</text
                   ><text>{{item.bank.timer}}</text></view
                 ><view class="packet-track"
                   ><view style="width:{{item.bank.progress}}%"></view
@@ -171,4 +177,98 @@
       开发：推进一轮
     </button></view
   >
+  <view
+    wx:if="{{packetSheet}}"
+    class="packet-overlay"
+    catchtouchmove="blockTouch"
+    catchtap="closePacket"
+  >
+    <view
+      class="packet-sheet {{packetSheet.kind === 'treasure' ? 'treasure-reveal' : ''}} phase-{{packetSheet.phase}}"
+      catchtap="blockTouch"
+    >
+      <view class="packet-flap"></view>
+      <button
+        class="packet-dismiss"
+        catchtap="closePacket"
+        disabled="{{packetSheet.phase === 'opening'}}"
+        aria-label="关闭红包，保留已叠金币"
+      >
+        ×
+      </button>
+      <view class="packet-sender"
+        ><image
+          class="packet-avatar"
+          src="/assets/{{packetSheet.avatar}}.png"
+          mode="aspectFill"
+        /><text class="packet-actor">{{packetSheet.actor}}</text
+        ><text class="packet-caption"
+          >活动助手发来的金币{{packetSheet.kind === 'treasure' ? '宝箱' :
+          '红包'}}</text
+        ></view
+      >
+      <view class="packet-sheet-title"
+        >{{packetSheet.phase === 'received' ? '开发金币已入账' :
+        packetSheet.phase === 'uncertain' ? '领取结果待确认' :
+        packetSheet.greeting}}</view
+      >
+      <view class="packet-reward"
+        ><text class="packet-total">{{packetSheet.total}}</text
+        ><text class="packet-unit">金币</text
+        ><text class="packet-state"
+          >{{packetSheet.phase === 'received' ? '已领取 · 基础与补贴分别记账' :
+          packetSheet.phase === 'opening' ? '3秒开发模拟中…' : packetSheet.phase
+          === 'uncertain' ? '保留原任务，请查询结果' : '待领取'}}</text
+        ></view
+      >
+      <view class="packet-breakdown"
+        >基础{{packetSheet.base}} ＋
+        补贴{{packetSheet.subsidy}}，合计{{packetSheet.total}}开发金币</view
+      >
+      <view
+        wx:if="{{packetSheet.phase === 'uncertain'}}"
+        class="packet-sheet-error"
+        >{{packetSheet.error}}</view
+      >
+      <button
+        wx:if="{{packetSheet.phase === 'ready' || packetSheet.phase === 'opening'}}"
+        class="packet-seal"
+        catchtap="openPacket"
+        disabled="{{packetSheet.phase === 'opening'}}"
+        aria-label="开，开始3秒开发模拟领取金币"
+      >
+        开
+      </button>
+      <button
+        wx:elif="{{packetSheet.phase === 'received'}}"
+        class="packet-receipt-done"
+        catchtap="closePacket"
+      >
+        收下，继续叠包
+      </button>
+      <button
+        wx:else
+        class="packet-receipt-done"
+        catchtap="retryPacket"
+        disabled="{{busy}}"
+      >
+        查询原任务
+      </button>
+      <button
+        wx:if="{{packetSheet.phase === 'ready'}}"
+        class="packet-cancel"
+        catchtap="closePacket"
+      >
+        暂不打开，保留已叠金币
+      </button>
+      <view class="packet-disclaimer"
+        >{{packetSheet.phase === 'received' ? '本次奖励已记入金币流水。' :
+        packetSheet.phase === 'uncertain' ?
+        '网络异常时先查询原任务，不重复发奖。' :
+        '点击「开」开始3秒开发模拟，无真实广告。'}}<view
+          >金币不可兑现，不向微信付款。</view
+        ></view
+      >
+    </view>
+  </view>
 </view>

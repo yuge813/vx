@@ -54,12 +54,12 @@ async function logout(all = false) {
   getApp()._ready = null;
 }
 let activeClaim = null;
-function claim(kind) {
+function claim(kind, options = {}) {
   if (activeClaim)
     return activeClaim.kind === kind
       ? activeClaim.promise
       : Promise.reject(new Error("请先完成或恢复当前奖励任务"));
-  const promise = claimOnce(kind).finally(() => {
+  const promise = claimOnce(kind, options).finally(() => {
     activeClaim = null;
   });
   activeClaim = { kind, promise };
@@ -103,7 +103,7 @@ const modal = (options) =>
   new Promise((resolve, reject) =>
     wx.showModal({ ...options, success: resolve, fail: reject }),
   );
-async function claimOnce(kind) {
+async function claimOnce(kind, options) {
   await getApp().ready();
   config = await request("/api/config");
   if (config.adProvider !== "demo") throw new Error("真实广告及验证尚未接入");
@@ -145,18 +145,21 @@ async function claimOnce(kind) {
       "，合计" +
       task.total +
       "开发金币。";
-  const answer = await modal({
-    title: "开发模拟 · 不播放真实广告",
-    content: content + "金币不可兑现。",
-    confirmText: "开始模拟",
-    cancelText: "取消保留",
-  });
+  const custom = typeof options.confirmTask === "function";
+  const answer = custom
+    ? await options.confirmTask(task)
+    : await modal({
+        title: "开发模拟 · 不播放真实广告",
+        content: content + "金币不可兑现。",
+        confirmText: "开始模拟",
+        cancelText: "取消保留",
+      });
   if (!answer.confirm) {
     await request("/api/tasks/" + task.id + "/cancel", "POST", {});
     wx.removeStorageSync("yx_pending_task");
     return null;
   }
-  wx.showLoading({ title: "3秒联调模拟", mask: true });
+  if (!custom) wx.showLoading({ title: "3秒联调模拟", mask: true });
   try {
     await new Promise((r) => setTimeout(r, 3100));
     const result = await request(
@@ -167,7 +170,7 @@ async function claimOnce(kind) {
     wx.removeStorageSync("yx_pending_task");
     return result;
   } finally {
-    wx.hideLoading();
+    if (!custom) wx.hideLoading();
   }
 }
 const money = (coins) =>

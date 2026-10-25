@@ -171,9 +171,10 @@ test("原生新版红包取消保留叠包，提交回包丢失后恢复不重�
 });
 
 test("原生聊天群页面加载真实卡片、暂存与恢复、金额更新和领取后新轮次", async (t) => {
-  const { client, advance } = await clientFixture(t, true);
+  const { client, advance, dropResponse } = await clientFixture(t, true);
   let page;
   const routes = [];
+  const tabChanges = [];
   let nativeNow = Date.now();
   const previewStorage = new Map();
   const wx = {
@@ -182,6 +183,8 @@ test("原生聊天群页面加载真实卡片、暂存与恢复、金额更新�
     nextTick: (fn) => fn(),
     showToast() {},
     showModal() {},
+    hideTabBar: () => tabChanges.push("hide"),
+    showTabBar: () => tabChanges.push("show"),
     navigateTo: (r) => routes.push(r.url),
     switchTab: (r) => routes.push(r.url),
   };
@@ -251,12 +254,97 @@ test("原生聊天群页面加载真实卡片、暂存与恢复、金额更新�
   page.tick();
   assert.equal(row().bank.disabled, true);
   page.data.busy = false;
-  await page.claim({ currentTarget: { dataset: { kind: "redpacket" } } });
+  const until = async (condition) => {
+    for (let i = 0; i < 200; i++) {
+      if (condition()) return;
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+    assert.fail("原生开红包面板未达到预期状态");
+  };
+  const event = { currentTarget: { dataset: { kind: "redpacket" } } };
+  let claiming = page.claim(event);
+  await until(() => page.data.packetSheet?.phase === "ready");
+  assert.equal(page.data.packetSheet.total, 800);
+  assert.equal(tabChanges.at(-1), "hide");
+  assert.equal(
+    page.data.group.user.balance,
+    0,
+    "点击封面不发奖，先显示开字面板",
+  );
+  page.closePacket();
+  await claiming;
+  assert.equal(tabChanges.at(-1), "show");
+  assert.equal(page.data.packetSheet, null);
+  assert.equal(row().bank.coins, 780, "关闭开字面板保留叠包金额");
+  claiming = page.claim(event);
+  await until(() => page.data.packetSheet?.phase === "ready");
+  page.openPacket();
+  page.openPacket();
+  await claiming;
+  assert.equal(page.data.packetSheet.phase, "received");
+  assert.equal(page.data.packetSheet.total, 800);
   assert.equal(row().bank.coins, 0);
   assert.equal(page.data.group.user.balance, 800);
+  page.closePacket();
+  assert.equal(page.data.packetSheet, null);
+  advance(120000);
+  await page.load();
+  claiming = page.claim(event);
+  await until(() => page.data.packetSheet?.phase === "ready");
+  page._visible = false;
+  page.leavePacket();
+  await claiming;
+  assert.equal(page.data.packetSheet, null, "离开页面结束确认等待，不残留面板");
+  assert.equal(tabChanges.at(-1), "show");
+  page._visible = true;
+  claiming = page.claim(event);
+  await until(() => page.data.packetSheet?.phase === "ready");
+  dropResponse();
+  page.openPacket();
+  await claiming;
+  assert.equal(
+    page.data.packetSheet.phase,
+    "uncertain",
+    "丢失回包先显示待确认，不能伪造到账",
+  );
+  await page.retryPacket();
+  assert.equal(page.data.packetSheet.phase, "received");
+  assert.equal(
+    page.data.group.user.balance,
+    1210,
+    "查询已完成原任务不重复发奖",
+  );
+  page.closePacket();
   page.bag();
   page.wallet();
   assert.deepEqual(routes, ["/pages/bag/index", "/pages/wallet/index"]);
+});
+
+test("原生红包自定义开字确认收到锁定奖励，关闭不发奖，完成回包丢失仍恢复原任务", async (t) => {
+  const { client, store, advance, dropResponse, storage } = await clientFixture(
+    t,
+    true,
+  );
+  advance(120000);
+  await client.request("/api/group");
+  let presented = 0;
+  const confirmTask = async (task) => {
+    presented++;
+    assert.equal(task.total, 410);
+    assert.equal(task.base, 390);
+    assert.equal(task.state, "pending");
+    return { confirm: presented > 1 };
+  };
+  assert.equal(await client.claim("redpacket", { confirmTask }), null);
+  assert.equal((await client.request("/api/me")).balance, 0);
+  dropResponse();
+  await assert.rejects(client.claim("redpacket", { confirmTask }), /连接失败/);
+  assert.ok(storage.get("yx_pending_task"));
+  const recovered = await client.claim("redpacket", { confirmTask });
+  assert.equal(recovered.recovered, true);
+  assert.equal(presented, 2, "已完成任务恢复不再次显示开字确认");
+  assert.equal((await client.request("/api/me")).balance, 410);
+  assert.equal(store.operations.reconcile().ok, true);
 });
 
 test("原生奖励任务全局互斥，同类并发复用一次任务，不同类型被阻止", async (t) => {

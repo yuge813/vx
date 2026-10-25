@@ -498,3 +498,319 @@ page {
 .history-treasure {
   background: linear-gradient(125deg, #b99bcf, #957db7);
 }
+
+/* 原创金币红包封面与两步开封面板。 */
+.chat-packet.is-envelope {
+  max-width: 590rpx;
+  border-radius: 14rpx;
+  background: linear-gradient(120deg, #f4a34f, #ed903f);
+}
+.room-native .is-envelope .packet-open {
+  min-height: 218rpx;
+  gap: 26rpx;
+  padding: 34rpx 60rpx 32rpx 30rpx;
+}
+.packet-envelope {
+  position: relative;
+  width: 86rpx;
+  height: 112rpx;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 8rpx;
+  background: #d4533e;
+  box-shadow: inset 0 -24rpx 40rpx #a7342918;
+}
+.envelope-flap {
+  position: absolute;
+  width: 132rpx;
+  height: 74rpx;
+  top: -24rpx;
+  left: -24rpx;
+  border-radius: 0 0 50% 50%;
+  background: #e4664b;
+  border-bottom: 4rpx solid #f6d287;
+}
+.envelope-seal {
+  position: absolute;
+  width: 36rpx;
+  height: 36rpx;
+  top: 36rpx;
+  left: 26rpx;
+  border-radius: 50%;
+  background: #f6d287;
+  color: #ba7435;
+  font:
+    22rpx/36rpx "Songti SC",
+    SimSun,
+    serif;
+  text-align: center;
+}
+.is-envelope .packet-greeting {
+  font-size: 32rpx;
+  font-weight: 500;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.is-envelope .packet-action {
+  font-size: 24rpx;
+  margin-top: 6rpx;
+}
+.is-envelope .packet-value {
+  font-size: 34rpx;
+  margin-top: 10rpx;
+}
+.is-envelope .packet-value text {
+  font-size: 20rpx;
+}
+.is-envelope .packet-bottom {
+  color: #9d8f7c;
+  background: #fffdfa;
+  border: 1rpx solid #ece7df;
+  border-top: 0;
+  border-radius: 0 0 14rpx 14rpx;
+  font-size: 20rpx;
+  padding: 10rpx 22rpx;
+}
+.is-envelope .packet-track {
+  display: none;
+}
+.room-native .is-envelope .packet-close {
+  top: 4rpx;
+  right: 4rpx;
+  font-size: 42rpx;
+}
+.chat-packet.is-envelope.is-waiting {
+  background: #dfd9cc;
+}
+.is-waiting .packet-envelope {
+  opacity: 0.4;
+}
+.packet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 28rpx;
+  box-sizing: border-box;
+  background: #161414a6;
+}
+.packet-sheet {
+  position: relative;
+  width: 620rpx;
+  max-width: 100%;
+  min-height: 960rpx;
+  max-height: calc(100vh - 56rpx);
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 70rpx 44rpx 46rpx;
+  border-radius: 26rpx;
+  background: #cb4d43;
+  color: #ffe9c4;
+  text-align: center;
+  box-shadow: 0 40rpx 140rpx #0004;
+}
+.packet-sheet > view:not(.packet-flap),
+.packet-sheet > button {
+  position: relative;
+  z-index: 1;
+}
+.packet-flap {
+  position: absolute;
+  width: 100%;
+  height: 890rpx;
+  left: 0;
+  top: -170rpx;
+  border-radius: 0 0 50% 50% / 0 0 10% 10%;
+  background: #db6050;
+  box-shadow:
+    0 2rpx 0 #e9a16e77,
+    0 16rpx 48rpx #82281812;
+}
+.room-native .packet-sheet .packet-dismiss {
+  position: absolute;
+  z-index: 2;
+  top: 16rpx;
+  right: 20rpx;
+  width: 68rpx;
+  height: 68rpx;
+  color: #ffdfb7;
+  font-size: 54rpx;
+  line-height: 1;
+}
+.packet-sender {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 14rpx;
+}
+.packet-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border: 1rpx solid #f8d0a573;
+  border-radius: 20rpx;
+}
+.packet-actor {
+  font-size: 32rpx;
+  font-weight: 500;
+  max-width: 100%;
+  word-break: break-all;
+}
+.packet-caption {
+  font-size: 22rpx;
+  color: #ffe7c8;
+}
+.packet-sheet-title {
+  font-size: 42rpx;
+  font-weight: 500;
+  color: #ffe2ae;
+  margin: 46rpx 0 22rpx;
+  line-height: 1.5;
+  max-height: 3em;
+  overflow: hidden;
+  word-break: break-all;
+}
+.packet-reward {
+  margin: 26rpx 0 10rpx;
+  line-height: 1.3;
+}
+.packet-total {
+  font-size: 64rpx;
+  font-weight: 500;
+}
+.packet-unit {
+  font-size: 26rpx;
+  margin-left: 10rpx;
+}
+.packet-state {
+  display: block;
+  font-size: 20rpx;
+  margin-top: 12rpx;
+}
+.packet-breakdown {
+  color: #ffe4c3;
+  font-size: 22rpx;
+  line-height: 1.6;
+  margin: 16rpx 0 0;
+}
+.room-native .packet-seal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 176rpx;
+  height: 176rpx;
+  min-height: 0;
+  margin: 58rpx auto 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 1rpx solid #ffedc1;
+  background: #f0ca88;
+  box-shadow:
+    inset 0 0 0 10rpx #e9bb7577,
+    0 12rpx 32rpx #8c302b35;
+  color: #77512e;
+  font:
+    68rpx/1 "Songti SC",
+    SimSun,
+    serif;
+  font-weight: 500;
+}
+.room-native .packet-seal[disabled] {
+  opacity: 1;
+}
+.room-native .packet-cancel {
+  background: transparent;
+  margin: 30rpx auto 0;
+  color: #ffe1c0;
+  font-size: 22rpx;
+}
+.packet-disclaimer {
+  color: #ffe1c4;
+  font-size: 20rpx;
+  line-height: 1.7;
+  margin: 38rpx 0 0;
+}
+.phase-opening .packet-seal {
+  animation: packet-turn 1.2s ease-in-out infinite;
+}
+.phase-opening .packet-dismiss {
+  opacity: 0.25;
+}
+.phase-received {
+  background: #fff8eb;
+  color: #af6e32;
+  padding-top: 44rpx;
+}
+.phase-received .packet-flap {
+  height: 450rpx;
+  top: -200rpx;
+}
+.phase-received .packet-sender {
+  gap: 12rpx;
+  color: #ffe9c4;
+}
+.phase-received .packet-avatar {
+  width: 76rpx;
+  height: 76rpx;
+}
+.phase-received .packet-caption {
+  display: none;
+}
+.phase-received .packet-sheet-title {
+  margin-top: 106rpx;
+  color: #a4714c;
+  font-size: 32rpx;
+}
+.phase-received .packet-total {
+  font-size: 112rpx;
+}
+.phase-received .packet-state {
+  color: #a89078;
+  font-size: 22rpx;
+}
+.phase-received .packet-breakdown,
+.phase-received .packet-disclaimer {
+  color: #a89078;
+}
+.room-native .packet-receipt-done {
+  width: 100%;
+  min-height: 86rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx;
+  border: 0;
+  border-radius: 12rpx;
+  background: #f0ca88;
+  color: #77512e;
+  font-size: 28rpx;
+  margin-top: 74rpx;
+  box-sizing: border-box;
+}
+.packet-sheet-error {
+  font-size: 22rpx;
+  margin-top: 24rpx;
+  line-height: 1.5;
+}
+.treasure-reveal {
+  background: #7550a2;
+}
+.treasure-reveal .packet-flap {
+  background: #9268b6;
+}
+.treasure-reveal.phase-received {
+  background: #fff8eb;
+}
+@keyframes packet-turn {
+  0%,
+  100% {
+    transform: perspective(480rpx) rotateY(0);
+  }
+  50% {
+    transform: perspective(480rpx) rotateY(45deg);
+  }
+}

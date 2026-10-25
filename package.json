@@ -20,6 +20,7 @@
     "release": "node scripts/release.mjs",
     "verify": "npm test && npm run check",
     "test:ops-browser": "node scripts/ops-browser-smoke.mjs",
+    "test:packet-ui": "node scripts/packet-ui-smoke.mjs",
     "test:container": "node scripts/container-smoke.mjs",
     "configure:mini": "node scripts/configure-mini.mjs"
   }

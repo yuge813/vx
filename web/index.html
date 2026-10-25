@@ -26,9 +26,35 @@
         <div class="loading">正在连接金币账户…</div>
       </main>
     </div>
-    <dialog id="reward-dialog">
+    <dialog
+      id="reward-dialog"
+      aria-labelledby="reward-title"
+      aria-describedby="reward-description"
+    >
+      <div class="packet-flap" aria-hidden="true"></div>
+      <button
+        id="reward-dismiss"
+        class="packet-dismiss"
+        aria-label="关闭红包，保留已叠金币"
+        hidden
+      >
+        ×
+      </button>
+      <div id="packet-sender" class="packet-sender" hidden>
+        <img
+          id="packet-avatar"
+          src="/assets/avatar-peach.svg"
+          alt="活动助手头像"
+        />
+        <strong id="packet-actor"></strong>
+        <span id="packet-caption">活动助手发来的金币红包</span>
+      </div>
       <div class="dialog-mark">开发联调</div>
       <h2 id="reward-title"></h2>
+      <div id="packet-reward" class="packet-reward" hidden>
+        <strong id="packet-total"></strong><span>金币</span
+        ><small id="packet-state">待领取</small>
+      </div>
       <p id="reward-description"></p>
       <div class="notice">
         这是3秒显式模拟，不播放真实广告、不产生广告收益。金币不可兑现。
@@ -38,6 +64,9 @@
       ><button class="button secondary" id="reward-cancel">
         取消，保留已叠金币
       </button>
+      <p class="packet-disclaimer">
+        点击「开」开始3秒开发模拟，无真实广告。<br />金币不可兑现，不向微信付款。
+      </p>
     </dialog>
     <div id="toast" class="toast" role="status" hidden></div>
   </body>

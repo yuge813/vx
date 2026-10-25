@@ -151,6 +151,20 @@ try {
   await shot("mobile-group-stacked");
   await b.click("[data-claim=redpacket]");
   await b.until("document.querySelector('#reward-dialog').open");
+  assert.equal(
+    await b.evaluate("document.querySelector('#reward-confirm').textContent"),
+    "开",
+  );
+  assert.equal(
+    store.profile(u).balance,
+    620,
+    "点击封面只显示开字面板，不发金币",
+  );
+  assert.equal(
+    await b.evaluate("document.querySelector('#packet-total').textContent"),
+    "8908",
+  );
+  await shot("mobile-packet-open");
   await b.click("#reward-cancel");
   await idle();
   assert.equal(
@@ -159,6 +173,11 @@ try {
   );
   await b.click("[data-claim=redpacket]");
   await b.until("document.querySelector('#reward-dialog').open");
+  await b.click("#reward-confirm");
+  await b.until(
+    "document.querySelector('#reward-dialog').dataset.phase==='received'",
+  );
+  await shot("mobile-packet-received");
   await b.click("#reward-confirm");
   await b.until(
     "!document.querySelector('#reward-dialog').open && document.querySelector('#app').getAttribute('aria-busy')==='false'",

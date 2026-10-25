@@ -22,3 +22,4 @@ jobs:
           test -n "$CHROMIUM_BIN"
           npm run test:browser
           npm run test:ops-browser
+          npm run test:packet-ui

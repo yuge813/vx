@@ -222,8 +222,12 @@ function roomPacket(b, contentText = "") {
   const saved = state.hidden[b.kind] === b.generation + ":" + b.coins;
   if (saved)
     return `<div class="chat-saved" data-bank="${b.kind}"><div>已暂存 <strong>${b.coins}金币</strong></div><small>金额保留，下一轮继续叠加。</small><button class="link" data-restore="${b.kind}">查看暂存${b.kind === "redpacket" ? "红包" : "宝箱"}</button></div>`;
-  const ready = b.coins > 0;
-  return `<div class="chat-packet ${b.kind === "treasure" ? "is-treasure" : ""} ${!ready ? "is-waiting" : ""}" data-bank="${b.kind}"><button class="packet-open" data-claim="${b.kind}" ${!canClaim(b.kind, b) ? "disabled" : ""}><img src="/assets/${b.kind === "redpacket" ? "packet" : "chest"}.svg" alt=""><span class="packet-copy"><strong>${esc(ready ? contentText || (b.kind === "redpacket" ? "恭喜发财，大吉大利" : "宝箱已准备，惊喜等你开") : b.kind === "redpacket" ? "下一份红包正在准备" : "下一份宝箱正在准备")}</strong><span>${b.locked ? "继续上次领取任务" : ready ? (b.kind === "redpacket" ? "点击领取红包" : "点击开启宝箱") : "倒计时结束后生成待领金额"}</span><b class="reward-value">${b.coins}<small> 金币</small></b></span></button>${ready && !b.locked ? `<button class="packet-close" data-skip="${b.kind}" aria-label="暂不打开，继续叠加">×</button>` : ""}<div class="packet-bottom"><span>${ready ? "开发奖励 · 非现金到账" : "系统准备中"}</span><span data-timer="${b.kind}"></span></div><div class="packet-track"><span data-bank-progress="${b.kind}"></span></div></div><div class="packet-hint">${b.atCap ? "已达本轮上限，可选择打开" : b.paused ? "新增累计暂停，已叠金币保留" : `每轮＋${b.increment} · 本轮上限${b.cap}`}</div>`;
+  const ready = b.coins > 0,
+    envelope = b.kind === "redpacket";
+  const art = envelope
+    ? '<span class="packet-envelope" aria-hidden="true"><i></i><b>金</b></span>'
+    : '<img src="/assets/chest.svg" alt="">';
+  return `<div class="chat-packet ${envelope ? "is-envelope" : "is-treasure"} ${!ready ? "is-waiting" : ""}" data-bank="${b.kind}"><button class="packet-open" data-claim="${b.kind}" aria-label="${envelope ? "查看金币红包，显示开字面板" : "查看宝箱"}" ${!canClaim(b.kind, b) ? "disabled" : ""}>${art}<span class="packet-copy"><strong>${esc(ready ? contentText || (envelope ? "恭喜发财，大吉大利" : "宝箱已准备，惊喜等你开") : envelope ? "下一份红包正在准备" : "下一份宝箱正在准备")}</strong><span>${b.locked ? "继续上次领取任务" : ready ? (envelope ? "点击拆红包" : "点击开启宝箱") : "倒计时结束后可领取"}</span><b class="reward-value">${b.coins}<small> 金币待领</small></b></span></button>${ready && !b.locked ? `<button class="packet-close" data-skip="${b.kind}" aria-label="暂不打开，继续叠加">×</button>` : ""}<div class="packet-bottom"><span>${envelope ? "金币红包 · 开发奖励" : "金币宝箱 · 开发奖励"}</span><span data-timer="${b.kind}"></span></div><div class="packet-track"><span data-bank-progress="${b.kind}"></span></div></div><div class="packet-hint">${b.atCap ? "已达本轮上限，可选择打开" : b.paused ? "新增累计暂停，已叠金币保留" : `每轮＋${b.increment} · 本轮上限${b.cap}`}</div>`;
 }
 function roomMessage(row) {
   const avatar = row.avatar
@@ -363,7 +367,7 @@ function privacy() {
       "账户与隐私",
       "管理昵称、导出最近记录、退出会话及申请注销。",
     ) +
-    `<div class="grid"><div><section class="card"><h2>个人昵称</h2><form id="profile-name-form"><input class="field" name="name" minlength="1" maxlength="16" value="${esc(u.name)}" required><button class="button small" type="submit">保存昵称</button></form></section><section class="card"><h2>数据说明 · 内部审核稿</h2><p class="caption">运营主体：${esc(state.config.operator?.name || "待配置")} · 联系方式：${esc(state.config.operator?.contact || "待配置")}</p><p class="muted">保存登录关联、账户、任务、流水、演示申请、邀请关系、群消息进度与反馈。本机保存会话、任务恢复及广告位预览冷却，不读取通讯录、位置或相册。</p><p class="muted">导出本账户最近100条各类记录，隐藏微信openid、会话和密钥。更多金币流水在记录页分页查看。正式运营前需完善企业主体、客服、保存期限及适用平台隐私声明。</p><button class="button light" data-action="export-account">导出最近账户JSON</button></section><button class="button secondary" data-action="logout">退出全部登录会话</button></div><section class="card"><h2>申请注销账户</h2>${c ? `<div class="notice">状态：${esc(({pending:"待审核",approved:"已注销",rejected:"已退回"})[c.state] || c.state)} ${esc(c.decision || "")}</div>` : ""}<p class="muted">先处理已入账余额、冻结申请和未完成任务。确认放弃未领取的开发奖励；审核后移除登录关联与非账务文本，保留必要账务及审计。申请处理中暂停新增奖励。</p><form id="account-closure-form"><textarea class="field" name="reason" minlength="2" maxlength="200" required placeholder="2—200字申请原因"></textarea><label class="room-checkbox"><input type="checkbox" name="discardUnclaimed" required>确认放弃尚未领取的开发奖励并了解保留范围</label><button class="button" type="submit" ${u.balance || u.frozen || u.pendingTask || c?.state === "pending" ? "disabled" : ""}>提交注销申请</button></form></section></div>`
+    `<div class="grid"><div><section class="card"><h2>个人昵称</h2><form id="profile-name-form"><input class="field" name="name" minlength="1" maxlength="16" value="${esc(u.name)}" required><button class="button small" type="submit">保存昵称</button></form></section><section class="card"><h2>数据说明 · 内部审核稿</h2><p class="caption">运营主体：${esc(state.config.operator?.name || "待配置")} · 联系方式：${esc(state.config.operator?.contact || "待配置")}</p><p class="muted">保存登录关联、账户、任务、流水、演示申请、邀请关系、群消息进度与反馈。本机保存会话、任务恢复及广告位预览冷却，不读取通讯录、位置或相册。</p><p class="muted">导出本账户最近100条各类记录，隐藏微信openid、会话和密钥。更多金币流水在记录页分页查看。正式运营前需完善企业主体、客服、保存期限及适用平台隐私声明。</p><button class="button light" data-action="export-account">导出最近账户JSON</button></section><button class="button secondary" data-action="logout">退出全部登录会话</button></div><section class="card"><h2>申请注销账户</h2>${c ? `<div class="notice">状态：${esc({ pending: "待审核", approved: "已注销", rejected: "已退回" }[c.state] || c.state)} ${esc(c.decision || "")}</div>` : ""}<p class="muted">先处理已入账余额、冻结申请和未完成任务。确认放弃未领取的开发奖励；审核后移除登录关联与非账务文本，保留必要账务及审计。申请处理中暂停新增奖励。</p><form id="account-closure-form"><textarea class="field" name="reason" minlength="2" maxlength="200" required placeholder="2—200字申请原因"></textarea><label class="room-checkbox"><input type="checkbox" name="discardUnclaimed" required>确认放弃尚未领取的开发奖励并了解保留范围</label><button class="button" type="submit" ${u.balance || u.frozen || u.pendingTask || c?.state === "pending" ? "disabled" : ""}>提交注销申请</button></form></section></div>`
   );
 }
 function render() {
@@ -463,20 +467,52 @@ async function claim(kind) {
   const description = task.rewardRange
     ? `福袋基础${task.rewardRange.min}—${task.rewardRange.max}金币，另加补贴${task.subsidy}。结果已在服务端锁定，完成前不公开。`
     : `基础${task.base}＋补贴${task.subsidy}，合计${task.total}开发金币。`;
-  $("#reward-title").textContent = task.title || "金币任务";
+  const packet = ["redpacket", "treasure"].includes(task.kind);
+  const source = state.group?.messages.find(
+    (r) => r.type === "packet" && r.bank.kind === task.kind,
+  );
+  const dialog = $("#reward-dialog");
+  dialog.className = packet
+    ? "packet-reveal" + (task.kind === "treasure" ? " treasure-reveal" : "")
+    : "";
+  dialog.dataset.phase = "ready";
+  $("#reward-dismiss").hidden = !packet;
+  $("#reward-dismiss").disabled = false;
+  $("#packet-sender").hidden = !packet;
+  $("#packet-reward").hidden = !packet;
+  $("#packet-avatar").src =
+    "/assets/" + (source?.avatar || "avatar-peach") + ".svg";
+  $("#packet-actor").textContent = source?.actor || "活动助手";
+  $("#packet-caption").textContent =
+    "活动助手发来的金币" + (task.kind === "treasure" ? "宝箱" : "红包");
+  $("#packet-total").textContent = task.total;
+  $("#packet-state").textContent = "待领取";
+  $("#reward-title").textContent = packet
+    ? source?.text || "恭喜发财，大吉大利"
+    : task.title || "金币任务";
   $("#reward-description").textContent = description;
   $("#reward-confirm").disabled = false;
-  $("#reward-confirm").textContent = "开始3秒模拟";
+  $("#reward-confirm").textContent = packet ? "开" : "开始3秒模拟";
+  $("#reward-confirm").setAttribute(
+    "aria-label",
+    packet ? "开，开始3秒开发模拟领取金币" : "开始3秒模拟",
+  );
   $("#reward-cancel").disabled = false;
+  $("#reward-cancel").textContent = packet
+    ? "暂不打开，保留已叠金币"
+    : "取消，保留已叠金币";
+  $(".packet-disclaimer").innerHTML =
+    "点击「开」开始3秒开发模拟，无真实广告。<br>金币不可兑现，不向微信付款。";
   $("#reward-progress").style.width = "0%";
-  const dialog = $("#reward-dialog");
   dialog.showModal();
+  if (packet) $("#reward-confirm").focus();
   await new Promise((resolve, reject) => {
     let chosen = false;
     const cleanup = () => {
       dialog.removeEventListener("cancel", cancel);
       $("#reward-confirm").onclick = null;
       $("#reward-cancel").onclick = null;
+      $("#reward-dismiss").onclick = null;
     };
     const cancel = async (e) => {
       e?.preventDefault();
@@ -495,6 +531,7 @@ async function claim(kind) {
     };
     dialog.addEventListener("cancel", cancel);
     $("#reward-cancel").onclick = cancel;
+    $("#reward-dismiss").onclick = cancel;
     $("#reward-confirm").onclick = async () => {
       if (chosen) return;
       chosen = true;
@@ -503,23 +540,55 @@ async function claim(kind) {
       dialog.addEventListener("cancel", prevent);
       $("#reward-confirm").disabled = true;
       $("#reward-cancel").disabled = true;
+      $("#reward-dismiss").disabled = true;
+      dialog.dataset.phase = "opening";
+      let keepReceipt = false;
       try {
         for (let n = 1; n <= 3; n++) {
-          $("#reward-confirm").textContent = "模拟进行中 " + (4 - n) + "秒";
+          $("#reward-confirm").textContent = packet
+            ? "开"
+            : "模拟进行中 " + (4 - n) + "秒";
+          if (packet)
+            $("#packet-state").textContent = "开发模拟中 · " + (4 - n) + "秒";
           await new Promise((r) => setTimeout(r, 1050));
           $("#reward-progress").style.width = (n / 3) * 100 + "%";
         }
         const result = await api("/tasks/" + task.id + "/complete", "POST", {});
         localStorage.removeItem("yx.task");
-        toast(
-          (result.task.total || 0) + "开发金币已入账，可查看基础及补贴流水",
-        );
-        resolve();
+        if (packet) {
+          keepReceipt = true;
+          dialog.dataset.phase = "received";
+          $("#reward-title").textContent = "开发金币已入账";
+          $("#packet-total").textContent = result.task.total;
+          $("#packet-state").textContent = "已领取 · 基础与补贴分别记账";
+          $(".packet-disclaimer").innerHTML =
+            "本次奖励已记入金币流水。<br>金币不可兑现，不向微信付款。";
+          $("#reward-confirm").disabled = false;
+          $("#reward-dismiss").disabled = false;
+          $("#reward-confirm").textContent = "收下，继续叠包";
+          $("#reward-confirm").setAttribute("aria-label", "收下，继续叠包");
+          const finishReceipt = (event) => {
+            event?.preventDefault();
+            dialog.removeEventListener("cancel", finishReceipt);
+            cleanup();
+            dialog.close();
+            resolve();
+          };
+          dialog.addEventListener("cancel", finishReceipt);
+          $("#reward-confirm").onclick = finishReceipt;
+          $("#reward-dismiss").onclick = finishReceipt;
+          $("#reward-confirm").focus();
+        } else {
+          toast(
+            (result.task.total || 0) + "开发金币已入账，可查看基础及补贴流水",
+          );
+          resolve();
+        }
       } catch (e) {
         reject(e);
       } finally {
         dialog.removeEventListener("cancel", prevent);
-        dialog.close();
+        if (!keepReceipt) dialog.close();
       }
     };
   });

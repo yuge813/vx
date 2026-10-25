@@ -10,6 +10,7 @@ Page({
     hidden: {},
     adPreview: { enabled: false, current: null },
     scrollTarget: "",
+    packetSheet: null,
   },
   onShow() {
     this._visible = true;
@@ -23,6 +24,7 @@ Page({
   },
   onHide() {
     this._visible = false;
+    this.leavePacket();
     api
       .request("/api/group/presence", "POST", { active: false })
       .catch(() => {});
@@ -32,6 +34,7 @@ Page({
   },
   onUnload() {
     this._visible = false;
+    this.leavePacket();
     api
       .request("/api/group/presence", "POST", { active: false })
       .catch(() => {});
@@ -90,7 +93,10 @@ Page({
     this._pacer.configure(config.adPacing);
     const adPreview = this._pacer.sample(
       Date.now(),
-      this._visible !== false && !this.data.busy && !group.user.pendingTask,
+      this._visible !== false &&
+        !this.data.busy &&
+        !this.data.packetSheet &&
+        !group.user.pendingTask,
       now,
     );
     const signature = JSON.stringify([adPreview.current, adPreview.dayCount]);
@@ -124,6 +130,7 @@ Page({
         ready: b.coins > 0,
         disabled:
           this.data.busy ||
+          !!this.data.packetSheet ||
           config.adProvider !== "demo" ||
           (group.user.pendingTask
             ? group.user.pendingTask.kind !== b.kind
@@ -155,7 +162,7 @@ Page({
           ? "继续上次领取任务"
           : b.coins
             ? b.kind === "redpacket"
-              ? "点击领取红包"
+              ? "点击拆红包"
               : "点击开启宝箱"
             : "倒计时结束后生成待领金额",
         hint: b.atCap
@@ -181,19 +188,99 @@ Page({
   },
   async claim(e) {
     if (this.data.busy) return;
+    const kind = e.currentTarget.dataset.kind;
+    const packet = ["redpacket", "treasure"].includes(kind);
     this.setData({ busy: true });
     this.tick();
     try {
-      const r = await api.claim(e.currentTarget.dataset.kind);
-      if (r) wx.showToast({ title: "开发金币已入账" });
+      const r = await api.claim(
+        kind,
+        packet ? { confirmTask: (task) => this.confirmPacket(task) } : {},
+      );
+      if (r && packet && this._visible !== false) {
+        this.showPacket({ ...this.packetView(r.task), phase: "received" });
+      } else if (r && !packet) wx.showToast({ title: "开发金币已入账" });
       await this.load();
     } catch (e) {
+      if (packet && this.data.packetSheet && this._visible !== false)
+        this.setData({
+          packetSheet: {
+            ...this.data.packetSheet,
+            phase: "uncertain",
+            error: e.message,
+          },
+        });
       api.toast(e);
     } finally {
       this.setData({ busy: false });
       this.tick();
     }
   },
+  packetView(task) {
+    const source = this.data.group.messages.find(
+      (r) => r.type === "packet" && r.bank.kind === task.kind,
+    );
+    return {
+      kind: task.kind,
+      total: task.total,
+      base: task.base,
+      subsidy: task.subsidy,
+      actor: source?.actor || "活动助手",
+      avatar: source?.avatar || "avatar-peach",
+      greeting: source?.text || "恭喜发财，大吉大利",
+    };
+  },
+  showPacket(packetSheet) {
+    this.setData({ packetSheet });
+    if (!this._packetTabHidden && typeof wx.hideTabBar === "function") {
+      this._packetTabHidden = true;
+      wx.hideTabBar({ animation: false, fail: () => {} });
+    }
+  },
+  confirmPacket(task) {
+    if (this._visible === false) return Promise.resolve({ confirm: false });
+    this.showPacket({ ...this.packetView(task), phase: "ready" });
+    return new Promise((resolve) => {
+      this._packetChoice = resolve;
+    });
+  },
+  openPacket() {
+    if (this.data.packetSheet?.phase !== "ready" || !this._packetChoice) return;
+    const choice = this._packetChoice;
+    this._packetChoice = null;
+    this.setData({
+      packetSheet: { ...this.data.packetSheet, phase: "opening" },
+    });
+    choice({ confirm: true });
+  },
+  closePacket() {
+    if (this.data.packetSheet?.phase === "opening") return;
+    if (this._packetChoice) {
+      const choice = this._packetChoice;
+      this._packetChoice = null;
+      choice({ confirm: false });
+    }
+    this.setData({ packetSheet: null });
+    if (this._packetTabHidden && typeof wx.showTabBar === "function")
+      wx.showTabBar({ animation: false, fail: () => {} });
+    this._packetTabHidden = false;
+    this.tick();
+  },
+  leavePacket() {
+    if (this._packetChoice) this._packetChoice({ confirm: false });
+    this._packetChoice = null;
+    this.setData({ packetSheet: null });
+    if (this._packetTabHidden && typeof wx.showTabBar === "function")
+      wx.showTabBar({ animation: false, fail: () => {} });
+    this._packetTabHidden = false;
+  },
+  retryPacket() {
+    if (this.data.packetSheet?.phase !== "uncertain") return;
+    return this.claim({
+      currentTarget: { dataset: { kind: this.data.packetSheet.kind } },
+    });
+  },
+  blockTouch() {},
   async skip(e) {
     try {
       const kind = e.currentTarget.dataset.kind,
