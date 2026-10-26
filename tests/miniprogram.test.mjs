@@ -255,9 +255,10 @@ test("原生聊天群页面加载真实卡片、暂存与恢复、金额更新�
   assert.equal(row().bank.disabled, true);
   page.data.busy = false;
   const until = async (condition) => {
-    for (let i = 0; i < 200; i++) {
+    const deadline = Date.now() + 3000;
+    while (Date.now() < deadline) {
       if (condition()) return;
-      await new Promise((resolve) => setImmediate(resolve));
+      await new Promise((resolve) => setTimeout(resolve, 5));
     }
     assert.fail("原生开红包面板未达到预期状态");
   };

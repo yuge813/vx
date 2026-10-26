@@ -164,7 +164,7 @@ try {
     await b.evaluate("document.querySelector('#packet-total').textContent"),
     "8908",
   );
-  await shot("mobile-packet-open");
+  await shot("mobile-packet-open-at-cap");
   await b.click("#reward-cancel");
   await idle();
   assert.equal(
@@ -177,7 +177,7 @@ try {
   await b.until(
     "document.querySelector('#reward-dialog').dataset.phase==='received'",
   );
-  await shot("mobile-packet-received");
+  await shot("mobile-packet-received-at-cap");
   await b.click("#reward-confirm");
   await b.until(
     "!document.querySelector('#reward-dialog').open && document.querySelector('#app').getAttribute('aria-busy')==='false'",

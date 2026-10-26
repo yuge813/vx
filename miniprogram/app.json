@@ -8,7 +8,8 @@
     "pages/records/index",
     "pages/invite/index",
     "pages/support/index",
-    "pages/privacy/index"
+    "pages/privacy/index",
+    "pages/play/index"
   ],
   "window": {
     "navigationBarTitleText": "悦享金币",

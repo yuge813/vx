@@ -26,6 +26,7 @@ function requestOnce(path, method = "GET", data) {
           res.data && res.data.error ? res.data.error.message : "请求失败",
         );
         e.status = res.statusCode;
+        e.code = res.data?.error?.code;
         reject(e);
       },
       fail() {

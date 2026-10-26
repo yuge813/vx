@@ -5,6 +5,7 @@ import { randomUUID, randomBytes, randomInt, createHash } from "node:crypto";
 import { buildRoomMessages } from "./room-view.mjs";
 import { RoomContent } from "./room-content.mjs";
 import { Operations } from "./operations.mjs";
+import { Play } from "./play.mjs";
 const need = (v, m, status = 400, code = "INVALID_REQUEST") => {
   if (!v) throw new AppError(m, status, code);
 };
@@ -94,6 +95,7 @@ export class YuanxiangStore extends Store {
       });
     this.roomContent = new RoomContent(this);
     this.operations = new Operations(this);
+    this.play = new Play(this);
     this.operator = options.operator || {
       name: "待配置运营主体",
       contact: "内部后台反馈，正式企业客服未配置",
@@ -107,7 +109,8 @@ export class YuanxiangStore extends Store {
     return {
       ...super.publicConfig(),
       brand: "悦享金币",
-      appVersion: "0.4.0",
+      appVersion: "0.5.0",
+      playEnabled: this.development,
       operator: this.operator,
       packetRules: `新一轮红包与宝箱每${this.settings().packetIntervalSeconds}秒累计${this.settings().packetIncrement}金币，上限${this.settings().packetCap}；均为开发参数`,
       prizes: this.prizes(),

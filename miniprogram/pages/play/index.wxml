@@ -1,0 +1,428 @@
+<view class="page play-page">
+  <view wx:if="{{screen === 'hub'}}" class="play-heading"
+    ><view class="eyebrow">A LITTLE CHALLENGE, EVERY DAY</view
+    ><view class="heading">每日趣玩</view
+    ><view class="muted"
+      >答几道趣题，动一动脑。把今天的小进步留下来。</view
+    ></view
+  >
+  <view wx:else class="play-subhead"
+    ><button
+      class="play-back"
+      bindtap="back"
+      disabled="{{busy}}"
+      aria-label="返回趣玩大厅"
+    >
+      ‹ 返回趣玩</button
+    ><text class="play-subtitle"
+      >{{screen === 'game' ? gameTitle : screen === 'review' || screen ===
+      'review-question' ? '我的错题本' : '今日趣答'}}</text
+    ><text class="play-day">{{day}}</text></view
+  >
+  <view wx:if="{{error}}" class="error play-error"
+    ><view>{{error}}</view
+    ><button
+      wx:if="{{pending}}"
+      class="button small light"
+      bindtap="retryPending"
+      disabled="{{busy}}"
+    >
+      查询刚才的操作</button
+    ><button
+      wx:else
+      class="button small light"
+      bindtap="load"
+      disabled="{{busy}}"
+    >
+      重新连接
+    </button></view
+  >
+  <view wx:if="{{pending && !error}}" class="notice"
+    ><view>有一笔操作尚未确认，先查询原操作，再继续游玩。</view
+    ><button
+      class="button small light"
+      bindtap="retryPending"
+      disabled="{{busy}}"
+    >
+      查询原操作
+    </button></view
+  >
+  <view wx:if="{{loading && !overview}}" class="play-loading"
+    ><view class="loading-mark"></view><view>正在准备今天的挑战…</view></view
+  >
+  <view wx:elif="{{overview && !enabled}}" class="empty"
+    ><view class="title">趣玩暂未开放</view
+    ><view class="space"
+      >当前仅提供内部体验。产品形态及发布条件确认前，正式环境关闭玩法。</view
+    ></view
+  >
+  <block wx:elif="{{enabled}}">
+    <block wx:if="{{screen === 'hub'}}">
+      <view class="play-status"
+        ><view class="play-status-dot"></view
+        ><text>内部体验 · 全部玩法免费 · 无广告奖励</text></view
+      >
+      <view class="play-quiz-hero"
+        ><view class="row"
+          ><view
+            ><view class="hero-overline">TODAY'S FIVE</view
+            ><view class="play-hero-title">今天，也聪明一点</view></view
+          ><view class="quiz-mark"
+            >知<view class="quiz-mark-dot"></view></view></view
+        ><view class="play-hero-copy"
+          >成语、自然与生活常识，每日5道。<view
+            >认真猜一猜，答完就有解析。</view
+          ></view
+        ><view class="play-quiz-progress"
+          ><view
+            style="width:{{overview.quiz.total ? overview.quiz.answered / overview.quiz.total * 100 : 0}}%"
+          ></view></view
+        ><view class="row"
+          ><text class="play-hero-caption"
+            >今日已答 {{overview.quiz.answered}} / {{overview.quiz.total}}</text
+          ><text class="play-hero-caption"
+            >连续完成 {{overview.quiz.streak || 0}} 天</text
+          ></view
+        ><button
+          class="play-start"
+          bindtap="openQuiz"
+          disabled="{{busy || pending}}"
+        >
+          {{overview.quiz.completed ? '查看今日成绩' : overview.quiz.answered ?
+          '继续今日趣答' : '开始今日5题'}}<text>›</text>
+        </button></view
+      >
+      <view class="play-section-row"
+        ><view class="title">换个方式，轻松一下</view
+        ><text class="caption">随时可停，进度保留</text></view
+      >
+      <view class="play-games-grid">
+        <view class="play-game-card merge-card"
+          ><view class="merge-mini"
+            ><view>2</view><view>4</view><view>8</view><view>16</view></view
+          ><view class="play-game-name">数字合成</view
+          ><view class="play-game-copy"
+            >滑动合并相同数字，<view>试着走到2048。</view></view
+          ><button
+            class="play-game-start"
+            data-kind="merge"
+            bindtap="startGame"
+            disabled="{{busy || pending}}"
+          >
+            进入挑战 <text>›</text>
+          </button></view
+        >
+        <view class="play-game-card memory-card"
+          ><view class="memory-mini"
+            ><view><text></text></view><view></view><view></view
+            ><view><text></text></view></view
+          ><view class="play-game-name">记忆翻牌</view
+          ><view class="play-game-copy"
+            >16张图案，找到8对。<view>记住，下一次更从容。</view></view
+          ><button
+            class="play-game-start"
+            data-kind="memory"
+            bindtap="startGame"
+            disabled="{{busy || pending}}"
+          >
+            进入挑战 <text>›</text>
+          </button></view
+        >
+      </view>
+      <view class="card play-records"
+        ><view class="row"
+          ><view class="title">只和昨天的自己比</view
+          ><view class="record-line-art"></view></view
+        ><view wx:for="{{records}}" wx:key="kind" class="play-record-row"
+          ><view
+            ><view class="record-name">{{item.title}}</view
+            ><view class="caption"
+              >{{item.resumable ? '有一局未结束，可以继续' : item.lastSession ?
+              '最近一局已保存' : '还没有个人记录'}}</view
+            ></view
+          ><view class="record-score"
+            >{{item.bestScore || 0}}<text>最佳分数</text></view
+          ></view
+        ><view class="caption play-record-note"
+          >这里是你的真实个人记录，没有虚构的在线人数或排行榜。</view
+        ></view
+      >
+      <button
+        class="play-review-entry"
+        bindtap="openReview"
+        disabled="{{busy || pending}}"
+      >
+        <view class="review-icon"><view></view><view></view><view></view></view
+        ><view class="flex"
+          ><view class="record-name">我的错题本</view
+          ><view class="caption">再想一次，让答案真正记住</view></view
+        ><text>›</text>
+      </button>
+      <view class="play-fineprint"
+        >趣答使用自编题目与解析，几何图案为原创绘制。<view
+          >玩法成绩不兑换金币、现金或其他权益。</view
+        ></view
+      >
+    </block>
+    <block wx:elif="{{screen === 'quiz' || screen === 'review-question'}}">
+      <block wx:if="{{question}}">
+        <view wx:if="{{screen === 'quiz'}}" class="play-question-progress"
+          ><view class="row"
+            ><text>今日 {{quiz.answered}} / {{quiz.total}} 题已答</text
+            ><text>{{quiz.correct}} 题正确</text></view
+          ><view class="quiz-progress-track"
+            ><view style="width:{{quizPercent}}%"></view></view
+        ></view>
+        <view class="card question-card"
+          ><view class="row"
+            ><text class="question-category">{{question.category}}</text
+            ><text class="caption"
+              >{{screen === 'review-question' ? '温故知新' : '每日趣答'}}</text
+            ></view
+          ><view class="question-prompt">{{question.prompt}}</view
+          ><view class="question-options"
+            ><button
+              wx:for="{{choices}}"
+              wx:key="index"
+              class="question-option {{item.selected ? 'is-selected' : ''}} {{item.correct ? 'is-correct' : ''}} {{item.wrong ? 'is-wrong' : ''}}"
+              data-index="{{item.index}}"
+              bindtap="selectChoice"
+              disabled="{{busy || pending || answer}}"
+            >
+              <text class="option-letter">{{item.letter}}</text
+              ><text class="option-text">{{item.text}}</text
+              ><text wx:if="{{item.correct}}" class="option-result">✓</text
+              ><text wx:elif="{{item.wrong}}" class="option-result">×</text>
+            </button></view
+          ><button
+            wx:if="{{!answer}}"
+            class="button"
+            bindtap="submitAnswer"
+            disabled="{{busy || pending || selected < 0}}"
+          >
+            {{busy ? '正在确认答案…' : '选好了，查看解析'}}
+          </button></view
+        >
+        <view
+          wx:if="{{answer}}"
+          class="answer-card {{answer.correct ? 'answer-correct' : 'answer-wrong'}}"
+          ><view class="answer-title"
+            >{{answer.correct ? '答对了，继续保持' :
+            '这次记住，下次就会'}}</view
+          ><view class="answer-explanation">{{answer.explanation}}</view
+          ><button
+            class="button light"
+            bindtap="nextQuestion"
+            disabled="{{busy || pending}}"
+          >
+            {{screen === 'review-question' ? '返回错题本' : quiz.completed ?
+            '查看今日成绩' : '下一题'}}
+          </button></view
+        >
+      </block>
+      <view wx:elif="{{quiz.completed}}" class="card quiz-complete"
+        ><view class="complete-emblem"
+          ><text>{{quiz.correct}}</text><view>/ {{quiz.total}}</view></view
+        ><view class="complete-title">今天的小挑战，完成了</view
+        ><view class="muted space"
+          >答对{{quiz.correct}}题，答错的题已记入错题本。<view
+            >明天换一组，看看能否更进一步。</view
+          ></view
+        ><button
+          class="button"
+          bindtap="openReview"
+          disabled="{{busy || pending}}"
+        >
+          去错题本复习</button
+        ><button class="button secondary" bindtap="back" disabled="{{busy}}">
+          返回趣玩大厅
+        </button></view
+      >
+      <view wx:else class="empty">今日题目暂未发布，请稍后再来。</view>
+      <view wx:if="{{quizResults.length && screen === 'quiz'}}" class="card"
+        ><view class="title">今天学到的</view
+        ><view
+          wx:for="{{quizResults}}"
+          wx:key="questionId"
+          class="quiz-result-row"
+          ><view class="row"
+            ><text class="result-correct {{item.correct ? '' : 'result-wrong'}}"
+              >{{item.correct ? '答对' : '再记一遍'}}</text
+            ><text class="caption">{{item.category}}</text></view
+          ><view class="result-prompt">{{item.prompt}}</view
+          ><view class="caption">正确答案：{{item.correctText}}</view
+          ><view class="result-explanation">{{item.explanation}}</view></view
+        ></view
+      >
+    </block>
+    <block wx:elif="{{screen === 'review'}}">
+      <view class="play-review-heading"
+        ><view class="heading">再想一次，就会了</view
+        ><view class="muted"
+          >这里收下你曾答错的题。重新选择后，再看解析。</view
+        ></view
+      ><view wx:if="{{!review.length}}" class="empty"
+        ><view class="title">还没有错题</view
+        ><view class="space"
+          >先完成今天的趣答。答错也没关系，错题会帮你留下来。</view
+        ><button
+          class="button light"
+          bindtap="openQuiz"
+          disabled="{{busy || pending}}"
+        >
+          去做今日5题
+        </button></view
+      ><view
+        wx:for="{{review}}"
+        wx:key="id"
+        class="card review-question-card"
+        ><view class="row"
+          ><text class="question-category">{{item.question.category}}</text
+          ><text class="caption">曾答错 {{item.wrongCount}} 次</text></view
+        ><view class="review-question-prompt">{{item.question.prompt}}</view
+        ><button
+          class="button light"
+          data-index="{{index}}"
+          bindtap="practice"
+          disabled="{{busy || pending}}"
+        >
+          再答一次
+        </button></view
+      >
+    </block>
+    <block wx:elif="{{screen === 'game' && game}}">
+      <view class="game-topline"
+        ><view
+          ><view class="game-title">{{gameTitle}}</view
+          ><view class="caption"
+            >{{game.kind === 'merge' ? '相同数字相遇，就会变成双倍。' :
+            '先记住，再找到另一半。'}}</view
+          ></view
+        ><button
+          class="game-pause"
+          bindtap="togglePause"
+          disabled="{{busy || pending || game.status !== 'active'}}"
+        >
+          {{gamePaused ? '继续' : '暂停'}}
+        </button></view
+      >
+      <view class="game-stat-grid"
+        ><view><text>{{game.score}}</text><view>本局分数</view></view
+        ><view><text>{{bestScore}}</text><view>个人最佳</view></view
+        ><view><text>{{timeLabel}}</text><view>本局用时</view></view></view
+      >
+      <view
+        wx:if="{{gamePaused && game.status === 'active'}}"
+        class="game-pause-note"
+        >已暂停，进度保留。点“继续”再开始。</view
+      >
+      <view
+        wx:if="{{game.kind === 'merge'}}"
+        class="merge-board"
+        bindtouchstart="touchStart"
+        catchtouchmove="touchMove"
+        bindtouchend="touchEnd"
+        ><view
+          wx:for="{{gameCells}}"
+          wx:key="index"
+          class="merge-cell tile-{{item.tone}}"
+          ><text>{{item.value}}</text></view
+        ></view
+      >
+      <view wx:else class="memory-board"
+        ><button
+          wx:for="{{gameCells}}"
+          wx:key="index"
+          class="memory-cell {{item.revealed ? 'is-revealed' : ''}} {{item.matched ? 'is-matched' : ''}}"
+          bindtap="flip"
+          data-index="{{item.index}}"
+          aria-label="{{item.revealed ? '已翻开图案' + item.symbol : '翻开第' + (item.index + 1) + '张牌'}}"
+          disabled="{{busy || pending || gamePaused || game.status !== 'active' || item.revealed}}"
+        >
+          <view
+            wx:if="{{item.revealed}}"
+            class="memory-symbol shape-{{item.shape}}"
+          ></view
+          ><view wx:else class="memory-card-back"
+            ><view></view><view></view><view></view><view></view></view
+          ><text wx:if="{{item.matched}}" class="memory-matched-label"
+            >配对</text
+          >
+        </button></view
+      >
+      <view class="game-helper"
+        >{{busy ? '正在保存这一手…' : game.kind === 'merge' ?
+        '在方格上滑动，或使用下方方向键。' :
+        '一次翻两张。相同图案配对后会留下来。'}}</view
+      >
+      <view wx:if="{{gameNotice}}" class="game-result-note"
+        >{{gameNotice}}</view
+      >
+      <view
+        wx:if="{{game.kind === 'merge' && game.status === 'active'}}"
+        class="direction-pad"
+        ><view class="direction-row"
+          ><button
+            data-direction="up"
+            bindtap="move"
+            disabled="{{busy || pending || gamePaused}}"
+            aria-label="向上移动"
+          >
+            ↑
+          </button></view
+        ><view class="direction-row"
+          ><button
+            data-direction="left"
+            bindtap="move"
+            disabled="{{busy || pending || gamePaused}}"
+            aria-label="向左移动"
+          >
+            ←</button
+          ><button
+            data-direction="down"
+            bindtap="move"
+            disabled="{{busy || pending || gamePaused}}"
+            aria-label="向下移动"
+          >
+            ↓</button
+          ><button
+            data-direction="right"
+            bindtap="move"
+            disabled="{{busy || pending || gamePaused}}"
+            aria-label="向右移动"
+          >
+            →
+          </button></view
+        ></view
+      >
+      <view class="game-action-row"
+        ><button
+          class="button secondary"
+          bindtap="restart"
+          disabled="{{busy || pending}}"
+        >
+          重新开始</button
+        ><button
+          wx:if="{{game.status === 'active'}}"
+          class="button light"
+          bindtap="finishGame"
+          disabled="{{busy || pending}}"
+        >
+          结束并保存</button
+        ><button
+          wx:else
+          class="button light"
+          bindtap="back"
+          disabled="{{busy}}"
+        >
+          返回大厅
+        </button></view
+      >
+      <view class="play-fineprint"
+        >离开页面会暂停计时，返回后可继续。<view
+          >仅保存个人挑战记录，不发放金币或现金奖励。</view
+        ></view
+      >
+    </block>
+  </block>
+</view>

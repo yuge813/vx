@@ -7,6 +7,7 @@ import {
   toast,
   downloadJSON,
 } from "./shared.js";
+import { createPlayHub } from "./play.js";
 const state = {
   page: "home",
   user: null,
@@ -41,6 +42,7 @@ let token = localStorage.getItem("yx.token") || "",
   adPacer = null,
   adPacerAccount = "",
   adPreviewSignature = "";
+let playMount = null;
 const money = (coins) =>
   ((coins || 0) / (state.config?.coinsPerYuan || 1000)).toFixed(2);
 async function api(path, method = "GET", data) {
@@ -57,6 +59,7 @@ async function api(path, method = "GET", data) {
   if (!r.ok) {
     const e = new Error(v.error?.message || "请求失败");
     e.status = r.status;
+    e.code = v.error?.code;
     throw e;
   }
   return v;
@@ -157,10 +160,10 @@ function home() {
   return (
     header(
       "EVERY DAY, A LITTLE MORE JOY",
-      "签到攒金币，惊喜每天有。",
-      "签到、红包群、宝箱和福袋，都在这里。",
+      "每天来一局，轻松有点趣。",
+      "每日趣答、数字益智，和熟悉的红包群都在这里。",
     ) +
-    `<div class="grid"><div>${hero()}${stats([
+    `${playEntry()}<div class="grid"><div>${hero()}${stats([
       [u.earnedToday, "今日已入账 / 金币"],
       [u.adsToday + " / " + u.dailyLimit, "今日完成 / 总上限"],
       [u.frozen, "申请冻结 / 金币"],
@@ -177,6 +180,13 @@ function home() {
         "",
       )}</div><section class="card"><div class="row"><h2>最近金币动态</h2><button class="link" data-nav="records">全部流水 ${icon("arrow")}</button></div>${recentLedger()}</section></div><aside><section class="card art-card"><div class="row"><h2>红包群正在等你</h2><span class="pill">可叠至${c.packetCap}</span></div><img src="/assets/packet.svg" alt="原创红包插画"><div class="reward-value">${state.group.banks.find((b) => b.kind === "redpacket")?.coins || 0}<small>当前待领金币</small></div><p class="muted">觉得少可以暂不打开，继续等待下一轮。金额由服务端累计，并有预算预留。</p><button class="button full" data-nav="group">进入红包群 ${icon("arrow")}</button></section><section class="card"><h2>每一笔，清清楚楚</h2><ol class="steps"><li><b>1</b><span>先确认基础奖励和补贴，再自主参与。</span></li><li><b>2</b><span>开发模拟成功后，服务端只记账一次。</span></li><li><b>3</b><span>演示提现先冻结，驳回退回，绝不显示虚假微信到账。</span></li></ol></section>${u.pendingTask ? '<button class="button secondary full" data-action="resume">继续未完成的任务</button>' : ""}</aside></div>`
   );
+}
+function playEntry() {
+  if (!state.config.playEnabled) return "";
+  return `<section class="entry-play"><div><div class="eyebrow">YOUR DAILY LITTLE CHALLENGE</div><h2>换换脑筋，发现一点新乐趣。</h2><p>每日5题 · 数字合成 · 记忆翻牌<br>免费游玩，留下自己的进步。</p><button class="button small" data-nav="play">进入趣玩大厅 ${icon("arrow")}</button></div><div class="entry-play-tiles" aria-hidden="true"><span>2</span><span>4</span><span>8</span><span>16</span></div></section>`;
+}
+function play() {
+  return '<div id="play-root" aria-live="polite"><div class="loading">正在读取你的趣玩进度…</div></div>';
 }
 function paceAds() {
   if (!state.user || !state.config) return false;
@@ -256,11 +266,17 @@ function group() {
       text: "信息流位置预览",
       detail: "未加载广告，不产生曝光或收入。",
     });
+  const playCard = state.config.playEnabled
+    ? '<button class="room-play-entry" data-nav="play"><span><strong>等红包，来点趣味挑战</strong><small>每日趣答 · 数字合成 · 记忆翻牌</small></span><span>去玩 →</span></button>'
+    : "";
+  const playTool = state.config.playEnabled
+    ? '<button class="link" data-nav="play">趣玩大厅</button>'
+    : "";
   const banner =
     state.adPreview.current?.format === "banner"
       ? `<aside class="room-ad-banner" data-ad-preview="banner"><span class="banner-badge">横幅预览</span><div><strong>等待期广告展示位置</strong><small>开发布局 · 无真实广告与收益</small></div><button data-action="hide-ad" aria-label="关闭横幅预览">×</button></aside>`
       : "";
-  return `<section class="room-shell"><header class="room-top"><h1 title="${esc(room.title)}（${room.memberCount}）">${esc(room.title)}<span>（${room.memberCount}）</span></h1><div class="room-wallet"><span class="coin-emblem">金</span><strong>${state.user.balance.toLocaleString()}</strong><button class="room-withdraw" data-nav="wallet" aria-label="打开演示提现钱包">提现</button></div></header><div class="room-mode">开发联调 · 金币不可兑现 · 人数为注册账户数，非在线人数</div><div class="room-disclosure">${esc(state.group.roomDisclosure)}</div><div class="room-stage"><button class="lucky-float" data-nav="bag" aria-label="打开幸运福袋"><span class="lucky-tip">点击领奖</span><img src="/assets/bag.svg" alt=""><strong>福袋</strong></button><div class="room-scroll feed">${rows.map(roomMessage).join("")}<div class="room-end">活动消息由运营方发布 · 金币以账户流水为准</div></div></div>${banner}<footer class="room-tools"><button class="link" data-action="rules">玩法说明</button>${state.adPreview.enabled ? `<button class="link" data-action="ad-schedule" data-ad-status>广告预览 ${state.adPreview.sessionCount}/${state.config.adPacing.sessionLimit}</button>` : ""}${state.user.pendingTask ? '<button class="link" data-action="resume">恢复未完成任务</button>' : ""}${state.config.mode === "development" ? '<button class="link" data-action="advance">开发：推进一轮</button>' : ""}</footer></section>`;
+  return `<section class="room-shell"><header class="room-top"><h1 title="${esc(room.title)}（${room.memberCount}）">${esc(room.title)}<span>（${room.memberCount}）</span></h1><div class="room-wallet"><span class="coin-emblem">金</span><strong>${state.user.balance.toLocaleString()}</strong><button class="room-withdraw" data-nav="wallet" aria-label="打开演示提现钱包">提现</button></div></header><div class="room-mode">开发联调 · 金币不可兑现 · 人数为注册账户数，非在线人数</div><div class="room-disclosure">${esc(state.group.roomDisclosure)}</div><div class="room-stage"><button class="lucky-float" data-nav="bag" aria-label="打开幸运福袋"><span class="lucky-tip">点击领奖</span><img src="/assets/bag.svg" alt=""><strong>福袋</strong></button><div class="room-scroll feed">${playCard}${rows.map(roomMessage).join("")}<div class="room-end">活动消息由运营方发布 · 金币以账户流水为准</div></div></div>${banner}<footer class="room-tools"><button class="link" data-action="rules">玩法说明</button>${playTool}${state.adPreview.enabled ? `<button class="link" data-action="ad-schedule" data-ad-status>广告预览 ${state.adPreview.sessionCount}/${state.config.adPacing.sessionLimit}</button>` : ""}${state.user.pendingTask ? '<button class="link" data-action="resume">恢复未完成任务</button>' : ""}${state.config.mode === "development" ? '<button class="link" data-action="advance">开发：推进一轮</button>' : ""}</footer></section>`;
 }
 function bag() {
   const c = state.config;
@@ -367,11 +383,16 @@ function privacy() {
       "账户与隐私",
       "管理昵称、导出最近记录、退出会话及申请注销。",
     ) +
-    `<div class="grid"><div><section class="card"><h2>个人昵称</h2><form id="profile-name-form"><input class="field" name="name" minlength="1" maxlength="16" value="${esc(u.name)}" required><button class="button small" type="submit">保存昵称</button></form></section><section class="card"><h2>数据说明 · 内部审核稿</h2><p class="caption">运营主体：${esc(state.config.operator?.name || "待配置")} · 联系方式：${esc(state.config.operator?.contact || "待配置")}</p><p class="muted">保存登录关联、账户、任务、流水、演示申请、邀请关系、群消息进度与反馈。本机保存会话、任务恢复及广告位预览冷却，不读取通讯录、位置或相册。</p><p class="muted">导出本账户最近100条各类记录，隐藏微信openid、会话和密钥。更多金币流水在记录页分页查看。正式运营前需完善企业主体、客服、保存期限及适用平台隐私声明。</p><button class="button light" data-action="export-account">导出最近账户JSON</button></section><button class="button secondary" data-action="logout">退出全部登录会话</button></div><section class="card"><h2>申请注销账户</h2>${c ? `<div class="notice">状态：${esc({ pending: "待审核", approved: "已注销", rejected: "已退回" }[c.state] || c.state)} ${esc(c.decision || "")}</div>` : ""}<p class="muted">先处理已入账余额、冻结申请和未完成任务。确认放弃未领取的开发奖励；审核后移除登录关联与非账务文本，保留必要账务及审计。申请处理中暂停新增奖励。</p><form id="account-closure-form"><textarea class="field" name="reason" minlength="2" maxlength="200" required placeholder="2—200字申请原因"></textarea><label class="room-checkbox"><input type="checkbox" name="discardUnclaimed" required>确认放弃尚未领取的开发奖励并了解保留范围</label><button class="button" type="submit" ${u.balance || u.frozen || u.pendingTask || c?.state === "pending" ? "disabled" : ""}>提交注销申请</button></form></section></div>`
+    `<div class="grid"><div><section class="card"><h2>个人昵称</h2><form id="profile-name-form"><input class="field" name="name" minlength="1" maxlength="16" value="${esc(u.name)}" required><button class="button small" type="submit">保存昵称</button></form></section><section class="card"><h2>数据说明 · 内部审核稿</h2><p class="caption">运营主体：${esc(state.config.operator?.name || "待配置")} · 联系方式：${esc(state.config.operator?.contact || "待配置")}</p><p class="muted">保存登录关联、账户、任务、流水、演示申请、邀请关系、群消息进度与反馈，以及趣答、错题和个人游戏进度。本机保存会话、任务恢复及广告位预览冷却，不读取通讯录、位置或相册。</p><p class="muted">导出本账户最近100条各类记录，隐藏微信openid、会话和密钥。更多金币流水在记录页分页查看。正式运营前需完善企业主体、客服、保存期限及适用平台隐私声明。</p><button class="button light" data-action="export-account">导出最近账户JSON</button></section><button class="button secondary" data-action="logout">退出全部登录会话</button></div><section class="card"><h2>申请注销账户</h2>${c ? `<div class="notice">状态：${esc({ pending: "待审核", approved: "已注销", rejected: "已退回" }[c.state] || c.state)} ${esc(c.decision || "")}</div>` : ""}<p class="muted">先处理已入账余额、冻结申请和未完成任务。确认放弃未领取的开发奖励；审核后移除登录关联与非账务文本，保留必要账务及审计。申请处理中暂停新增奖励。</p><form id="account-closure-form"><textarea class="field" name="reason" minlength="2" maxlength="200" required placeholder="2—200字申请原因"></textarea><label class="room-checkbox"><input type="checkbox" name="discardUnclaimed" required>确认放弃尚未领取的开发奖励并了解保留范围</label><button class="button" type="submit" ${u.balance || u.frozen || u.pendingTask || c?.state === "pending" ? "disabled" : ""}>提交注销申请</button></form></section></div>`
   );
 }
 function render() {
   if (!state.user) return;
+  if (state.page === "play" && playMount && $("#play-root")) return;
+  if (playMount) {
+    playMount.dispose();
+    playMount = null;
+  }
   paceAds();
   document.body.classList.toggle("room-open", state.page === "group");
   const oldFeed = $(".feed"),
@@ -386,17 +407,50 @@ function render() {
     .join("");
   $("#app").innerHTML =
     (
-      { home, group, bag, wallet, records, invite, support, profile, privacy }[
-        state.page
-      ] || home
+      {
+        home,
+        group,
+        bag,
+        wallet,
+        records,
+        invite,
+        support,
+        profile,
+        privacy,
+        play,
+      }[state.page] || home
     )() +
     (state.page === "group"
       ? ""
       : '<footer class="footer">悦享金币 · 元享式玩法独立开发版</footer>');
   $("#app").setAttribute("aria-busy", "false");
+  if (state.page === "play") {
+    playMount = createPlayHub({
+      api,
+      userId: state.user.id,
+      onNavigate: navigate,
+    });
+    Promise.resolve(playMount.mount($("#play-root"))).catch((e) =>
+      toast(e.message),
+    );
+  }
   if ($(".feed"))
     $(".feed").scrollTop = nearBottom ? $(".feed").scrollHeight : scroll;
   tick();
+}
+async function navigate(page) {
+  if (state.page === "group" && page !== "group")
+    api("/group/presence", "POST", { active: false }).catch(() => {});
+  state.page = page;
+  render();
+  window.scrollTo(0, 0);
+  if (page === "group") refreshRoom();
+  if (page === "records") {
+    const history = await api("/history?type=ledger");
+    state.ledger = history.items;
+    state.historyCursor = history.nextCursor;
+    render();
+  }
 }
 function tick() {
   if (!state.user) return;
@@ -619,18 +673,7 @@ document.addEventListener("click", async (e) => {
   if (!b || b.disabled || state.busy) return;
   try {
     if (b.dataset.nav) {
-      if (state.page === "group" && b.dataset.nav !== "group")
-        api("/group/presence", "POST", { active: false }).catch(() => {});
-      state.page = b.dataset.nav;
-      render();
-      window.scrollTo(0, 0);
-      if (state.page === "group") refreshRoom();
-      if (state.page === "records") {
-        const history = await api("/history?type=ledger");
-        state.ledger = history.items;
-        state.historyCursor = history.nextCursor;
-        render();
-      }
+      await navigate(b.dataset.nav);
       return;
     }
     if (b.dataset.claim) {
@@ -692,7 +735,7 @@ document.addEventListener("click", async (e) => {
       );
     if (a === "privacy")
       window.alert(
-        "开发版保存安装标识、会话、任务、金币流水、演示申请、单层邀请关系、活动消息进度与发布记录及反馈；本机保存广告位预览次数和关闭冷却，不上报为广告曝光或收入。不读取通讯录、位置、相册或剪贴板。正式运营还需主体隐私声明、保留期限、注销和企业客服流程。",
+        "开发版保存安装标识、会话、任务、金币流水、演示申请、单层邀请关系、活动消息进度与发布记录及反馈、趣答与错题及游戏进度；本机保存广告位预览次数和关闭冷却，不上报为广告曝光或收入。不读取通讯录、位置、相册或剪贴板。正式运营还需主体隐私声明、保留期限、注销和企业客服流程。",
       );
     if (a === "retry") await initialize();
     if (a === "history-more") {

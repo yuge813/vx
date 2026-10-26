@@ -30,6 +30,16 @@
       bindscroll="onScroll"
     >
       <view class="room-messages">
+        <button
+          wx:if="{{config.playEnabled}}"
+          class="room-play-entry"
+          bindtap="play"
+        >
+          <view
+            ><text>等红包，来点趣味挑战</text
+            ><view>每日趣答 · 数字合成 · 记忆翻牌</view></view
+          ><text>去玩 →</text>
+        </button>
         <view
           wx:for="{{rows}}"
           wx:key="id"
@@ -165,6 +175,7 @@
   >
   <view class="room-tools"
     ><button bindtap="rules">玩法说明</button
+    ><button wx:if="{{config.playEnabled}}" bindtap="play">趣玩大厅</button
     ><button wx:if="{{adPreview.enabled}}" bindtap="adSchedule">
       广告预览 {{adPreview.sessionCount}}/{{config.adPacing.sessionLimit}}</button
     ><button

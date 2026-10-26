@@ -814,3 +814,35 @@ page {
     transform: perspective(480rpx) rotateY(45deg);
   }
 }
+
+.room-native .room-play-entry {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20rpx;
+  padding: 28rpx;
+  border: 1rpx solid #e4d8bf;
+  border-radius: 20rpx;
+  background: #fffaee;
+  color: #8d6a45;
+  text-align: left;
+  margin: 0 0 40rpx;
+}
+.room-play-entry > view > text {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+.room-play-entry > view > view {
+  font-size: 20rpx;
+  color: #ad9577;
+  margin-top: 6rpx;
+}
+.room-play-entry > text {
+  font-size: 24rpx;
+  white-space: nowrap;
+}
+.room-tools {
+  flex-wrap: wrap;
+}

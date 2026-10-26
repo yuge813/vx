@@ -6,6 +6,7 @@ import { timingSafeEqual, randomUUID } from "node:crypto";
 import { Store, AppError } from "./store.mjs";
 import { YuanxiangStore } from "./yuanxiang.mjs";
 import { runtimeConfig } from "./runtime-config.mjs";
+import { routePlay } from "./play-routes.mjs";
 
 const publicRoot = fileURLToPath(new URL("../web/", import.meta.url));
 const fail = (message, status = 400, code) => {
@@ -212,7 +213,11 @@ export function createApp({
         }
         const userId = store.authenticate(token);
         takeLimit("user:" + userId, 600, res);
-        if (req.method !== "GET") takeLimit("write:" + userId, 120, res);
+        if (req.method !== "GET") {
+          if (req.method === "POST" && path.startsWith("/api/play/games/"))
+            takeLimit("play-action:" + userId, 360, res);
+          else takeLimit("write:" + userId, 120, res);
+        }
         if (
           extension &&
           (await extension({
@@ -336,6 +341,8 @@ export async function yuanxiangRoutes({
   readBody,
   store,
 }) {
+  if (await routePlay({ req, path, admin, userId, send, readBody, store }))
+    return true;
   let match;
   if (admin) {
     const query = new URL(req.url, "http://localhost").searchParams;

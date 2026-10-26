@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomBytes } from "node:crypto";
@@ -37,7 +37,10 @@ try {
     "127.0.0.1::8792",
     "-v",
     volume + ":/app/data",
-    "yuanxiang-review:0.4.0",
+    "yuanxiang-review:" +
+      JSON.parse(
+        readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+      ).version,
   );
   created = true;
   let port = command(

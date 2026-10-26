@@ -315,6 +315,9 @@ Page({
   wallet() {
     wx.navigateTo({ url: "/pages/wallet/index" });
   },
+  play() {
+    wx.navigateTo({ url: "/pages/play/index" });
+  },
   bag() {
     wx.switchTab({ url: "/pages/bag/index" });
   },

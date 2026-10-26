@@ -40,7 +40,7 @@ for (const page of app.pages) {
     "WXML不应包含HTML标签",
   );
   for (const match of xml.matchAll(
-    /(?:bind|catch)(?:tap|input|confirm|change|scroll)="([A-Za-z]+)"/g,
+    /(?:bind|catch)(?::)?(?:tap|input|confirm|change|scroll|touchstart|touchmove|touchend|touchcancel)="([A-Za-z]+)"/g,
   ))
     assert.match(
       js,
@@ -82,4 +82,13 @@ for (const target of ["web/ad-pacing.js", "miniprogram/services/ad-pacing.js"])
     readFileSync(target, "utf8"),
     readFileSync("shared/ad-pacing.cjs", "utf8"),
     "广告预览调度源文件不一致；请从shared复制生成",
+  );
+for (const target of [
+  "web/play-games.js",
+  "miniprogram/services/play-games.js",
+])
+  assert.equal(
+    readFileSync(target, "utf8"),
+    readFileSync("shared/play-games.cjs", "utf8"),
+    "趣玩共享规则源不一致；请从shared复制生成",
   );

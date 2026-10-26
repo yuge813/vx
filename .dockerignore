@@ -1,5 +1,6 @@
 .git
 .env*
+**/.env*
 data
 backups
 dist
@@ -7,3 +8,7 @@ node_modules
 coverage
 *.log
 **/project.private.config.json
+*.user.bak
+**/*.user.bak
+**/*.sqlite
+**/*.sqlite-*

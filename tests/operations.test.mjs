@@ -93,7 +93,7 @@ test("经营报表区分人工现金收支与开发金币，无展示或权重�
   const { s, u, advance } = setup(t);
   earn(s, u, advance);
   assert.equal(s.publicConfig().version, s.settings().version);
-  assert.equal(s.publicConfig().appVersion, "0.4.0");
+  assert.equal(s.publicConfig().appVersion, "0.5.0");
   const report = s.operations.report(1),
     row = report.rows[0];
   assert.equal(row.completed, 1);

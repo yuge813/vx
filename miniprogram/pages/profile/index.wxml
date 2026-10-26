@@ -57,5 +57,5 @@
     ><button wx:if="{{user.pendingTask}}" class="button light" bindtap="resume">
       恢复未完成任务
     </button></block
-  ><view class="footer">悦享金币 v0.4 · 元享式玩法独立开发版</view></view
+  ><view class="footer">悦享金币 v0.5 · 趣玩整合体验版</view></view
 >

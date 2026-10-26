@@ -65,6 +65,9 @@ Page({
   group() {
     wx.switchTab({ url: "/pages/group/index" });
   },
+  play() {
+    wx.navigateTo({ url: "/pages/play/index" });
+  },
   bag() {
     wx.switchTab({ url: "/pages/bag/index" });
   },

@@ -3,7 +3,7 @@ permissions:
   contents: read
 on:
   push:
-    branches: ["codex/yuanxiang-v1-review"]
+    branches: ["codex/yuanxiang-v1-review", "codex/yuanxiang-entertainment"]
   pull_request:
 jobs:
   verify:
@@ -23,3 +23,5 @@ jobs:
           npm run test:browser
           npm run test:ops-browser
           npm run test:packet-ui
+          npm run test:play-browser
+          npm run test:play-admin

@@ -79,6 +79,7 @@ export class Operations {
   exportData(id) {
     return {
       generatedAt: this.store.now(),
+      play: this.store.play?.exportData(id) || null,
       scope:
         "本账户最近100条各类记录；更多记录可通过记录页分页读取。无微信openid、会话或密钥。",
       profile: this.store.profile(id),
@@ -182,6 +183,7 @@ export class Operations {
           .run("closed:" + u.id, u.id);
         this.db.prepare("DELETE FROM sessions WHERE user_id=?").run(u.id);
         this.db.prepare("DELETE FROM room_posts WHERE user_id=?").run(u.id);
+        this.store.play?.erasePersonal(u.id);
         this.db.prepare("DELETE FROM room_clocks WHERE user_id=?").run(u.id);
         this.db
           .prepare(

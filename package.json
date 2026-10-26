@@ -1,8 +1,8 @@
 {
   "name": "yuanxiang-style-miniapp",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
-  "description": "元享式金币玩法开发版：签到、红包群叠包、宝箱、福袋和演示提现",
+  "description": "悦享整合体验版：每日趣答、数字合成、记忆翻牌、红包群及运营后台",
   "type": "module",
   "engines": {
     "node": ">=24"
@@ -21,6 +21,9 @@
     "verify": "npm test && npm run check",
     "test:ops-browser": "node scripts/ops-browser-smoke.mjs",
     "test:packet-ui": "node scripts/packet-ui-smoke.mjs",
+    "test:play-browser": "node scripts/play-browser-smoke.mjs",
+    "test:play-admin": "node scripts/play-admin-smoke.mjs",
+    "test:play-container": "node scripts/play-container-smoke.mjs",
     "test:container": "node scripts/container-smoke.mjs",
     "configure:mini": "node scripts/configure-mini.mjs"
   }

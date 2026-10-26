@@ -1,11 +1,25 @@
 <view class="page"
   ><view class="eyebrow">EVERY DAY, A LITTLE MORE JOY</view
-  ><view class="heading">签到攒金币，惊喜每天有。</view
-  ><view class="muted">签到、红包群、宝箱和福袋，都在这里。</view
+  ><view class="heading">每天来一局，轻松有点趣。</view
+  ><view class="muted">每日趣答、数字益智，和熟悉的红包群都在这里。</view
   ><view class="notice">开发联调 · 广告为显式模拟，金币不可兑现。</view
   ><view wx:if="{{error}}" class="error" bindtap="load"
     >{{error}} · 点击重试</view
   ><block wx:if="{{user}}"
+    ><view wx:if="{{config.playEnabled}}" class="entry-play"
+      ><view class="entry-play-copy"
+        ><view class="eyebrow">YOUR DAILY LITTLE CHALLENGE</view
+        ><view class="title">换换脑筋，发现一点新乐趣。</view
+        ><view class="muted"
+          >每日5题 · 数字合成 · 记忆翻牌<view
+            >免费游玩，留下自己的进步。</view
+          ></view
+        ><button class="button small" bindtap="play">
+          进入趣玩大厅 →
+        </button></view
+      ><view class="entry-play-tiles"
+        ><text>2</text><text>4</text><text>8</text><text>16</text></view
+      ></view
     ><view class="hero" bindtap="wallet"
       ><view class="row"
         ><text>我的金币</text><text class="pill">开发账户</text></view
